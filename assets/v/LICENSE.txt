@@ -1,0 +1,5 @@
+hero.vrm is pixiv's "VRM1_Constraint_Twist_Sample" model (c) 2022 pixiv Inc.,
+from the @pixiv/three-vrm examples, with its textures downscaled.
+Its embedded VRM 1.0 license (https://vrm.dev/licenses/1.0/) allows use by everyone,
+corporate commercial use, redistribution, and redistribution of modified versions.
+Credit is not required.

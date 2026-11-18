@@ -31,6 +31,7 @@ WASD or arrow keys to move, or click where you want to go. Drag to turn the came
 - Built with three.js r147 and @pixiv/three-vrm 1.0.6, loaded from jsDelivr.
 - Hosted as a plain web page, the game plays solo. Multiplayer, chat, the shared world boss and the leaderboard use Claude artifact features and only work in the Claude-hosted version.
 - Nature props and weapon models are by Kenney (CC0). See `assets/*/License.txt`.
+- The built-in heroes use pixiv's VRM sample model (c) 2022 pixiv Inc., whose license allows redistribution and modification. Each class recolors its hair and clothes. See `assets/v/LICENSE.txt`.
 
 ## Deploy on Render
 

@@ -484,6 +484,7 @@ async function init3d(onProgress){
   await Promise.all(jobs);
   [["tree_oak",11,"#2C6B2A","#A6D152"],["tree_default",23,"#2F7330","#B4DA5C"],["tree_detailed",37,"#356E2C","#C2D865"],["tree_fat_fall",53,"#3B7A33","#9DCC55"]].forEach(([n,sd,a,b])=>{propTpl[n]=makeTree(sd,a,b);});
   placeProps();buildGrass();buildScenery();initParticles();initPost();await loadVrmBufs();
+  loadHeroVrm().then(()=>{if(!HERO_VRM)return;if(meChar)attachVrm(meChar);Object.values(peerChars).forEach(attachVrm);buildVrmShots();});
   boss3=makeBoss3();scene.add(boss3);
   ready3d=true;}
 /* the island: one smooth mesh with rolling hills; colours blend between neighbouring tiles */
@@ -658,16 +659,36 @@ async function loadVrmBufs(){for(const k of ["knight","tide","ember"]){const v=a
 function parseVrm(buf){return new Promise((res,rej)=>{if(!window.THREE_VRM)return rej(new Error("The VRM loader did not load"));const ld=new THREE.GLTFLoader();ld.register(p=>new THREE_VRM.VRMLoaderPlugin(p));
   ld.parse(buf.slice(0),"",g=>{const v=g.userData.vrm;if(!v)return rej(new Error("That file isn't a VRM model"));try{THREE_VRM.VRMUtils.removeUnnecessaryJoints(g.scene);}catch(e){}
     try{if(v.meta&&v.meta.metaVersion==="0")THREE_VRM.VRMUtils.rotateVRM0(v);}catch(e){}res(v);},e=>rej(e&&e.message?e:new Error("Couldn't read that file")));});}
-async function attachVrm(c){const rec=VRM_BUF[c.cls];if(!rec)return;let v;try{v=await parseVrm(rec.buf);}catch(e){toast("Couldn't load your VRoid hero: "+e.message);return;}
-  if(meChar!==c)return;
+let HERO_VRM=null;
+async function loadHeroVrm(){const glb=buf=>buf&&buf.byteLength>1000&&new Uint32Array(buf.slice(0,4))[0]===0x46546C67;
+  try{const r=await fetch("assets/v/hero.vrm");if(r.ok&&!/html/.test(r.headers.get("content-type")||"")){const buf=await r.arrayBuffer();if(glb(buf)){HERO_VRM=buf;return;}}}catch(e){}
+  try{const r=await fetch("assets/v/hero.vrm.txt");if(!r.ok)return;const bin=atob((await r.text()).trim());const u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);if(glb(u.buffer))HERO_VRM=u.buffer;}catch(e){}}
+/* each class gets its own hair colour and clothes on the shared model */
+const VRM_STYLE={knight:{hair:null,Tops:"#7D97E6",Bottoms:"#3A3F5C",Shoes:"#6A4330"},tide:{hair:[.57,.7,.14],Tops:null,Bottoms:"#5AA6F0",Shoes:"#2F6FC0"},ember:{hair:[.01,.8,.06],Tops:"#A88BDA",Bottoms:"#3B2A55",Shoes:"#4A2E22"}};
+const HUE_TEX={};
+function hsl2rgb(h,s2,l){const q=l<.5?l*(1+s2):l+s2-l*s2,p2=2*l-q,f=t=>{t=(t%1+1)%1;return t<1/6?p2+(q-p2)*6*t:t<.5?q:t<2/3?p2+(q-p2)*(2/3-t)*6:p2;};return [f(h+1/3),f(h),f(h-1/3)];}
+function hueTex(tex,h,sat,ladd,key){if(HUE_TEX[key])return HUE_TEX[key];const img=tex&&tex.image;if(!img||!img.width)return tex;const cv2=document.createElement("canvas");cv2.width=img.width;cv2.height=img.height;const g=cv2.getContext("2d");g.drawImage(img,0,0);
+  const d=g.getImageData(0,0,cv2.width,cv2.height),A=d.data;for(let i=0;i<A.length;i+=4){const r=A[i]/255,gg=A[i+1]/255,bb=A[i+2]/255,mx=Math.max(r,gg,bb),mn=Math.min(r,gg,bb);const l=Math.min(.95,(mx+mn)/2+ladd*(1-(mx+mn)/2));const sOld=mx===mn?0:(mx-mn)/(1-Math.abs(mx+mn-1));
+    const o=hsl2rgb(h,Math.max(sat,sOld),l);A[i]=o[0]*255;A[i+1]=o[1]*255;A[i+2]=o[2]*255;}
+  g.putImageData(d,0,0);const t=new THREE.CanvasTexture(cv2);t.flipY=tex.flipY;t.encoding=tex.encoding;t.wrapS=tex.wrapS;t.wrapT=tex.wrapT;t.needsUpdate=true;return HUE_TEX[key]=t;}
+function vrmMats(v){const out=[];v.scene.traverse(o=>{if(!o.isMesh)return;(Array.isArray(o.material)?o.material:[o.material]).forEach(m=>{if(m&&!out.includes(m))out.push(m);});});return out;}
+function styleVrm(v,cls){const st=VRM_STYLE[cls];if(!st)return;vrmMats(v).forEach(m=>{const n=m.name||"";
+    if(st.hair&&/HAIR/.test(n)){for(const k of ["map","shadeMultiplyTexture"])if(m[k]&&m[k].image){const key=cls+k+(m[k].uuid||n);m[k]=hueTex(m[k],st.hair[0],st.hair[1],st.hair[2],cls+":"+n+":"+k);}}
+    for(const part of ["Tops","Bottoms","Shoes"])if(st[part]&&n.indexOf(part)===0&&m.color)m.color.set(st[part]);});}
+async function attachVrm(c){if(!c||c.vrm||c.vrmLoading)return;const rec=c===meChar?VRM_BUF[c.cls]:null,buf=rec?rec.buf:HERO_VRM;if(!buf)return;c.vrmLoading=true;let v;
+  try{v=await parseVrm(buf);}catch(e){c.vrmLoading=false;if(rec)toast("Couldn't load your VRoid hero: "+e.message);return;}
+  c.vrmLoading=false;if(!c.root.parent||c.vrm)return;if(!rec)styleVrm(v,c.cls);attachVrmTo(c,v,!rec);}
+function attachVrmTo(c,v,styled){
   v.scene.updateMatrixWorld(true);const box=new THREE.Box3().setFromObject(v.scene),h=box.max.y-box.min.y,k=h>.2?1.72/h:1;
   const holder=new THREE.Group();holder.scale.setScalar(k);holder.add(v.scene);v.scene.traverse(o=>{if(o.isMesh){o.castShadow=true;o.frustumCulled=false;}});
   const hand=v.humanoid.getRawBoneNode("rightHand");
   if(hand){const q=new THREE.Quaternion();hand.getWorldQuaternion(q);const ad=new THREE.Group();ad.quaternion.copy(q.invert().multiply(new THREE.Quaternion().setFromEuler(new THREE.Euler(0,0,-Math.PI/2))));ad.scale.setScalar(1/k);
     const wc=makeWeapon(c.cls);if(c.cls==="ember"){wc.rotation.set(0,-Math.PI/2,0);}else if(c.cls==="tide"){wc.rotation.set(.2,0,-.3);}else{wc.rotation.set(Math.PI*.62,0,0);}wc.position.set(0,-.06,.02);ad.add(wc);hand.add(ad);}
   const head=v.humanoid.getRawBoneNode("head");if(head){const q=new THREE.Quaternion();head.getWorldQuaternion(q);const ad=new THREE.Group();ad.quaternion.copy(q.invert());ad.scale.setScalar(1/k);ad.position.y=.06/k;ad.add(c.hatG);c.hatG.position.set(0,0,0);c.hatG.scale.setScalar(.5);head.add(ad);}
-  try{(v.materials||[]).forEach(m=>{if(m.color)m.color.multiplyScalar(.74);if(m.shadeColorFactor)m.shadeColorFactor.multiplyScalar(.82);});}catch(e){}
-  c.body.visible=false;c.root.add(holder);c.vrm=v;c.vrmHolder=holder;}
+  const mats=vrmMats(v),base=new Map();mats.forEach(m=>{if(m.color){m.color.multiplyScalar(.74);base.set(m,m.color.clone());}if(m.shadeColorFactor)m.shadeColorFactor.multiplyScalar(.82);});
+  const tops=mats.filter(m=>/^Tops/.test(m.name||"")&&m.color);
+  c.recolor=o=>{tops.forEach(m=>{if(o&&o.body)m.color.set(o.body).multiplyScalar(.74);else m.color.copy(base.get(m));});};
+  c.body.visible=false;c.root.add(holder);c.vrm=v;c.vrmHolder=holder;const oid=c.hatId;c.hatId=null;setHat(c,oid||"plain");}
 function animVrm(c,dt){c.st+=dt;c.t+=dt;const s=c.st,T=c.t,st=c.cur,v=c.vrm,Hm=v.humanoid,E=v.expressionManager,Hd=c.vrmHolder;
   const set=(b,x,y,z)=>{const n=Hm.getNormalizedBoneNode(b);if(n)n.rotation.set(x,y,z);};const ex=(n,val)=>{try{if(E&&E.getExpression(n))E.setValue(n,val);}catch(e){}};
   let bob=0,legA=0,armL=0,armR=0,lean=0,headY=0,headX=0,twist=0,elbow=.18,mood="n";
@@ -828,7 +849,7 @@ function sync3d(dt){
     placeChar(meChar,me.x,me.y,me.face||0,dt);}
   /* other players */
   const seen=new Set();peers.forEach(p=>{const pr=p.presence;seen.add(p.peer);let c=peerChars[p.peer];
-    if(!c||c.cls!==(pr.cls||"knight")){if(c)scene.remove(c.root);c=peerChars[p.peer]=makeChar(CLASSES[pr.cls]?pr.cls:"knight",pr.outfit);}
+    if(!c||c.cls!==(pr.cls||"knight")){if(c)scene.remove(c.root);c=peerChars[p.peer]=makeChar(CLASSES[pr.cls]?pr.cls:"knight",pr.outfit);attachVrm(c);}
     setHat(c,pr.outfit);const lp=lerpPeer(p);play(c,pr.atk&&Date.now()-pr.atk<400?(pr.cls==="ember"?"holding-both-shoot":"attack-melee-right"):pr.moving?"sprint":"idle",false);placeChar(c,lp.x,lp.y,+pr.face||0,dt);});
   for(const k in peerChars)if(!seen.has(k)){scene.remove(peerChars[k].root);delete peerChars[k];}
   /* monsters */
@@ -861,13 +882,17 @@ function drawOverlay(){ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,W,H);
     ctx.globalAlpha=1;});
   if(me.dead>0){ctx.fillStyle="rgba(29,35,64,.35)";ctx.fillRect(0,0,W,H);ctx.fillStyle="#fff";ctx.font="400 28px 'Lilita One',sans-serif";ctx.textAlign="center";ctx.fillText(`Back to the harbor in ${Math.ceil(me.dead)}…`,W/2,H/2);}}
 /* render a hero portrait to an image (hero pick, wardrobe) */
-function heroShot(cls,outfitId,S0,rot){const Z=S0||256;const sc=new THREE.Scene();sc.add(new THREE.HemisphereLight("#FFFFFF","#B8A894",.75));const dl=new THREE.DirectionalLight("#FFF1D6",.85);dl.position.set(2,3,4);sc.add(dl);
-  const prev=scene;scene=sc;const c=makeChar(cls,outfitId);scene=prev;c.cur="idle";animHero(c,.01);c.root.rotation.y=rot==null?-.35:rot;
-  const cam=new THREE.PerspectiveCamera(30,1,.1,20);cam.position.set(0,1.0,3.6);cam.lookAt(0,.9,0);
+const VSHOT={};
+async function buildVrmShots(){if(!HERO_VRM)return;for(const k of ["knight","tide","ember"]){if(VSHOT[k])continue;try{const v=await parseVrm(HERO_VRM);styleVrm(v,k);const sc=new THREE.Scene();sc.add(new THREE.HemisphereLight("#FFFFFF","#B8A894",.75));const dl=new THREE.DirectionalLight("#FFF1D6",.85);dl.position.set(2,3,4);sc.add(dl);
+    const prev=scene;scene=sc;const c=makeChar(k,"plain");scene=prev;attachVrmTo(c,v,true);c.cur="idle";for(let i=0;i<20;i++)animVrm(c,.03);VSHOT[k]={c,sc};}catch(e){}}
+  for(const key in SHOTS)delete SHOTS[key];if($("#pick")&&!$("#pick").hidden)pickClass();if(tab==="wardrobe")renderCamp();}
+function heroShot(cls,outfitId,S0,rot){const Z=S0||256;let sc,c;const V=VSHOT[cls];if(V){sc=V.sc;c=V.c;c.hatId=null;setHat(c,outfitId);}else{sc=new THREE.Scene();sc.add(new THREE.HemisphereLight("#FFFFFF","#B8A894",.75));const dl=new THREE.DirectionalLight("#FFF1D6",.85);dl.position.set(2,3,4);sc.add(dl);
+  const prev=scene;scene=sc;c=makeChar(cls,outfitId);scene=prev;c.cur="idle";animHero(c,.01);}c.root.rotation.y=rot==null?-.35:rot;
+  const cam=new THREE.PerspectiveCamera(30,1,.1,20);if(V){cam.position.set(0,.95,3.3);cam.lookAt(0,.88,0);}else{cam.position.set(0,1.0,3.6);cam.lookAt(0,.9,0);}
   const rt=new THREE.WebGLRenderTarget(Z,Z,{samples:4});rt.texture.encoding=THREE.sRGBEncoding;R3.setRenderTarget(rt);R3.setClearColor(0,0);R3.clear();R3.render(sc,cam);
   const px=new Uint8Array(Z*Z*4);R3.readRenderTargetPixels(rt,0,0,Z,Z,px);R3.setRenderTarget(null);rt.dispose();
   const cv2=document.createElement("canvas");cv2.width=cv2.height=Z;const g=cv2.getContext("2d"),id=g.createImageData(Z,Z);for(let y=0;y<Z;y++)id.data.set(px.subarray((Z-1-y)*Z*4,(Z-y)*Z*4),y*Z*4);g.putImageData(id,0,0);return cv2.toDataURL();}
-const SHOTS={};const shot=(cls,o)=>SHOTS[cls+o]||(SHOTS[cls+o]=heroShot(cls,o));
+const SHOTS={};const shot=(cls,o)=>SHOTS[cls+o]||(SHOTS[cls+o]=heroShot(cls,o,VSHOT[cls]?384:256));
 function initPost(){if(!THREE.EffectComposer||!THREE.UnrealBloomPass||!THREE.GammaCorrectionShader)return;
   try{const pr=Math.min(2,window.devicePixelRatio||1);const rt=new THREE.WebGLRenderTarget(Math.max(1,W*pr),Math.max(1,H*pr),{samples:4,type:THREE.HalfFloatType});
     composer=new THREE.EffectComposer(R3,rt);composer.setPixelRatio(pr);composer.addPass(new THREE.RenderPass(scene,camera));
@@ -1028,7 +1053,7 @@ cv.addEventListener("contextmenu",e=>e.preventDefault());
 let armed=0;$("#resetBtn").addEventListener("click",e=>{if(Date.now()-armed>3000){armed=Date.now();e.target.textContent="Tap again to erase your hero";setTimeout(()=>e.target.textContent="Start over",3000);return;}S=fresh();save();location.reload();});
 
 /* hero choice */
-function pickClass(){$("#pick").hidden=false;$("#classes").innerHTML=Object.entries(CLASSES).map(([k,c])=>`<button type="button" data-cls="${k}" id="cls-${k}"><img src="${shot(k,"plain")}" alt="" width="128" height="128" style="width:128px;height:128px;object-fit:contain"><b>${c.name}</b><small>${c.blurb}</small></button>`).join("");
+function pickClass(){$("#pick").hidden=false;$("#classes").innerHTML=Object.entries(CLASSES).map(([k,c])=>`<button type="button" data-cls="${k}" id="cls-${k}"><img src="${shot(k,"plain")}" alt="" width="160" height="160" style="width:160px;height:160px;object-fit:contain"><b>${c.name}</b><small>${c.blurb}</small></button>`).join("");
 }
 $("#classes").addEventListener("click",e=>{const b=e.target.closest("button[data-cls]");if(!b)return;S.cls=b.dataset.cls;$("#pick").hidden=true;resetHp();renderCamp();save();pushHero(true);toast("Welcome to Ikigai Saga!");sys("Tip: turn on Auto hunt, or click a monster to fight it. The world boss lives north of the harbor.");});
 
