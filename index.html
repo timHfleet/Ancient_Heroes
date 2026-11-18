@@ -730,20 +730,54 @@ function attachVrmTo(c,v,styled){
   const tops=mats.filter(m=>/^Tops/.test(m.name||"")&&m.color);
   c.recolor=o=>{tops.forEach(m=>{if(o&&o.body)m.color.set(o.body).multiplyScalar(.74);else m.color.copy(base.get(m));});};
   c.body.visible=false;c.root.add(holder);c.vrm=v;c.vrmHolder=holder;const oid=c.hatId;c.hatId=null;setHat(c,oid||"plain");}
-function animVrm(c,dt){c.st+=dt;c.t+=dt;const s=c.st,T=c.t,st=c.cur,v=c.vrm,Hm=v.humanoid,E=v.expressionManager,Hd=c.vrmHolder;
-  const sg=c.vsg||1,set=(b,x,y,z)=>{const n=Hm.getNormalizedBoneNode(b);if(n)n.rotation.set(x*sg,y,z*sg);};const ex=(n,val)=>{try{if(E&&E.getExpression(n))E.setValue(n,val);}catch(e){}};
-  let bob=0,legA=0,armL=0,armR=0,lean=0,headY=0,headX=0,twist=0,elbow=.18,mood="n";
-  if(st==="sprint"){const p=s*11;legA=Math.sin(p)*.8;armL=-Math.sin(p)*.75;armR=Math.sin(p)*.75;bob=Math.abs(Math.sin(p))*.05;lean=.16;elbow=.9;}
-  else if(st==="attack-melee-right"){const q=Math.min(1,s/.35);armR=-2.6+q*3.4;lean=.1*Math.sin(q*Math.PI);armL=.3;twist=-.45+q*.75;mood="f";}
-  else if(st==="interact-right"){const w=Math.sin(Math.min(1,s/.35)*Math.PI);armR=-1.6*w;armL=-1.6*w;mood="f";elbow=.1;}
-  else if(st==="holding-both-shoot"){armR=-1.5;armL=-1.4;elbow=.35;mood="f";}
-  else if(st==="die"){const q=Math.min(1,s/.5);Hd.rotation.x=-q*1.45;Hd.position.y=q*.12;ex("blink",1);ex("angry",0);v.update(dt);return;}
-  else{armL=Math.sin(T*2.2)*.05;armR=-Math.sin(T*2.2)*.05;headY=Math.sin(T*.9)*.15;headX=Math.sin(T*.6)*.04;if(c.cls==="ember"&&st==="holding-both"){armR=-.6;armL=-.4;}}
-  Hd.rotation.x=0;Hd.position.y=bob;
-  set("spine",lean,twist*.6,0);set("chest",0,twist*.4,0);
-  set("leftUpperLeg",legA,0,0);set("rightUpperLeg",-legA,0,0);set("leftLowerLeg",Math.max(0,legA)*1.1,0,0);set("rightLowerLeg",Math.max(0,-legA)*1.1,0,0);
-  set("leftUpperArm",armL,0,-1.2);set("rightUpperArm",armR,0,1.2);set("leftLowerArm",0,-elbow,0);set("rightLowerArm",0,elbow,0);
-  set("neck",headX*.5,headY*.5,0);set("head",headX*.5,headY*.5,0);
+/* full-body motion for VRoid heroes: every joint gets a target, and joints blend smoothly toward it */
+const VBONES=["hips","spine","chest","upperChest","neck","head","leftShoulder","rightShoulder","leftUpperArm","rightUpperArm","leftLowerArm","rightLowerArm","leftHand","rightHand",
+  "leftUpperLeg","rightUpperLeg","leftLowerLeg","rightLowerLeg","leftFoot","rightFoot"];
+const VFINGERS=["Index","Middle","Ring","Little"].flatMap(f=>["Proximal","Intermediate","Distal"].map(j=>f+j));
+const ease=x=>x<=0?0:x>=1?1:x*x*(3-2*x),lerp=(a,b,t)=>a+(b-a)*t,clamp01=x=>Math.max(0,Math.min(1,x));
+function animVrm(c,dt){c.st+=dt;c.t+=dt;const s=c.st,T=c.t,st=c.cur,v=c.vrm,Hm=v.humanoid,E=v.expressionManager,Hd=c.vrmHolder,sg=c.vsg||1;
+  const ex=(n,val)=>{try{if(E&&E.getExpression(n))E.setValue(n,val);}catch(e){}};
+  const P={};VBONES.forEach(b=>P[b]=[0,0,0]);let bob=0,swayX=0,mood="n",rate=12;
+  const spd=c._spd||0,run=clamp01((spd-.4)/3.2);
+  /* relaxed standing base */
+  const breath=Math.sin(T*1.7),shift=Math.sin(T*.45);
+  P.spine=[.03+.012*breath,0,-.025*shift];P.chest=[.015*breath,0,0];
+  P.leftUpperArm=[.04+.025*breath,0,-1.22];P.rightUpperArm=[.04+.025*breath,0,1.22];P.leftLowerArm=[0,-.28,0];P.rightLowerArm=[0,.28,0];
+  P.leftHand=[0,0,-.12];P.rightHand=[0,0,.12];
+  if(st==="die"){const q=Math.min(1,s/.5);Hd.rotation.x=-q*1.45;Hd.position.y=q*.12;ex("blink",1);ex("angry",0);ex("happy",0);v.update(dt);return;}
+  Hd.rotation.x=0;
+  if(st==="sprint"){c.ph=(c.ph||0)+dt*(7+5*run);const p=c.ph,sp=Math.sin(p),cp=Math.cos(p),th=.5+.3*run,kn=.55+.75*run;
+    P.leftUpperLeg=[-th*sp,0,.02];P.rightUpperLeg=[th*sp,0,-.02];
+    P.leftLowerLeg=[.12+kn*Math.max(0,cp),0,0];P.rightLowerLeg=[.12+kn*Math.max(0,-cp),0,0];
+    P.leftFoot=[-.25*Math.max(0,cp)+.15*Math.max(0,-sp),0,0];P.rightFoot=[-.25*Math.max(0,-cp)+.15*Math.max(0,sp),0,0];
+    P.hips=[0,.14*sp,.03*cp];P.spine=[.08+.14*run,-.1*sp,0];P.chest=[.03,-.09*sp,0];
+    const aw=.45+.45*run,el=.45+.95*run;P.leftUpperArm=[aw*sp,0,-1.25+.08*run];P.rightUpperArm=[-aw*sp,0,1.25-.08*run];
+    P.leftLowerArm=[0,-el,0];P.rightLowerArm=[0,el,0];P.neck=[-.04*run,.05*sp,0];P.head=[-.03,.05*sp,0];
+    bob=(.02+.035*run)*Math.abs(cp);rate=16;}
+  else if(st==="attack-melee-right"){const k=clamp01(s/.38),w=ease(k/.32),f=ease((k-.32)/.33);
+    P.rightUpperArm=[lerp(lerp(.05,-2.5,w),.75,f),lerp(0,-.3,w),lerp(lerp(1.2,.9,w),1.05,f)];P.rightLowerArm=[0,lerp(lerp(.3,1.2,w),.15,f),0];
+    P.leftUpperArm=[lerp(.05,.35,w),0,-1.15];P.leftLowerArm=[0,-.6,0];
+    P.chest=[lerp(0,-.08,w)+.12*f,lerp(lerp(0,.45,w),-.5,f),0];P.spine=[.05+.12*f,lerp(lerp(0,.25,w),-.3,f),0];P.hips=[0,lerp(lerp(0,.2,w),-.25,f),0];
+    P.leftUpperLeg=[lerp(0,-.45,f),0,.05];P.rightUpperLeg=[lerp(0,.3,f),0,-.05];P.leftLowerLeg=[lerp(.1,.45,f),0,0];P.rightLowerLeg=[lerp(.1,.25,f),0,0];
+    P.head=[.05,lerp(lerp(0,-.25,w),.3,f),0];bob=-.05*f;mood="f";rate=24;}
+  else if(st==="interact-right"){const k=clamp01(s/.4),u=Math.sin(k*Math.PI);
+    P.leftUpperArm=[-1.5*u,0,-1.2+.12*u];P.rightUpperArm=[-1.5*u,0,1.2-.12*u];P.leftLowerArm=[0,-.2,0];P.rightLowerArm=[0,.2,0];P.leftHand=[0,0,.3*u];P.rightHand=[0,0,-.3*u];
+    P.spine=[-.08*u,0,0];P.chest=[-.06*u,0,0];P.head=[-.15*u,0,0];P.leftUpperLeg=[-.15*u,0,.08];P.rightUpperLeg=[.12*u,0,-.08];P.leftLowerLeg=[.25*u,0,0];P.rightLowerLeg=[.2*u,0,0];
+    bob=.03*u;mood="f";rate=20;}
+  else if(st==="holding-both-shoot"||(c.cls==="ember"&&st==="holding-both")){const aim=st==="holding-both-shoot"?1:.35;
+    P.chest=[0,-.55*aim,0];P.spine=[.04,-.25*aim,0];P.head=[0,.75*aim,0];P.neck=[0,.1*aim,0];
+    P.leftUpperArm=[-1.5*aim,.15*aim,-1.2+.1*aim];P.leftLowerArm=[0,-.1,0];P.rightUpperArm=[-1.4*aim,-.1*aim,1.2-.15*aim];P.rightLowerArm=[0,1.9*aim+.28*(1-aim),0];
+    P.leftUpperLeg=[-.12,0,.12*aim];P.rightUpperLeg=[.1,0,-.1*aim];P.leftLowerLeg=[.15,0,0];P.rightLowerLeg=[.1,0,0];mood=aim>.5?"f":"n";rate=18;}
+  else{ /* idle: weight on one leg, breathing, looking around */
+    const hy=.22*Math.sin(T*.37)+.08*Math.sin(T*1.1);P.hips=[0,.05*shift,.035*shift];P.leftUpperLeg=[.02,0,.03-.035*shift];P.rightUpperLeg=[-.04,0,-.03-.035*shift];
+    P.leftLowerLeg=[.06+.08*Math.max(0,shift),0,0];P.rightLowerLeg=[.06+.08*Math.max(0,-shift),0,0];P.neck=[.02,hy*.4,0];P.head=[.04*Math.sin(T*.6),hy*.6,.05*Math.sin(T*.31)];swayX=.015*shift;}
+  /* relaxed curled fingers */
+  const curl=st==="attack-melee-right"||st==="holding-both-shoot"?.9:.45;
+  for(const side of ["left","right"]){const sd=side==="left"?-1:1;for(const f of VFINGERS){const n=Hm.getNormalizedBoneNode(side+f);if(n)n.rotation.set(0,0,sd*curl*sg*(f.endsWith("Proximal")?.8:1));}}
+  /* blend every joint toward its target */
+  const k=1-Math.exp(-dt*rate);c.pose=c.pose||{};
+  for(const b of VBONES){const n=Hm.getNormalizedBoneNode(b);if(!n)continue;const tg=P[b],cur=c.pose[b]||(c.pose[b]=[0,0,0]);for(let i=0;i<3;i++)cur[i]+=(tg[i]-cur[i])*k;n.rotation.set(cur[0]*sg,cur[1],cur[2]*sg);}
+  c.bobS=lerp(c.bobS||0,bob,k);c.swayS=lerp(c.swayS||0,swayX,k);Hd.position.set(c.swayS,c.bobS,0);
   c.blinkT-=dt;if(c.blinkT<-.12)c.blinkT=2+Math.random()*3;ex("blink",mood==="n"&&c.blinkT<0?1:0);ex("angry",mood==="f"?.55:0);ex("happy",mood==="n"?.2:0);
   v.update(dt);}
 function play(c,name){if(c.cur!==name){c.cur=name;c.st=0;}}
