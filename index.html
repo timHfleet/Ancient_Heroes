@@ -52,16 +52,19 @@ canvas#ov{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
 .chat form{display:flex;gap:6px}
 .chat input{flex:1;min-width:0;border:2px solid #fff;border-radius:999px;padding:7px 12px;font:700 14px var(--body);background:rgba(255,255,255,.92);color:var(--text)}
 .chat button{border:0;border-radius:999px;padding:7px 12px;font:800 13px var(--body);background:var(--ink);color:#fff;cursor:pointer}
-.skills{right:12px;bottom:12px;display:flex;gap:10px;align-items:flex-end;pointer-events:auto}
-.sk{position:relative;width:70px;height:70px;border-radius:50%;border:4px solid #fff;font:400 13px/1 var(--display);color:#3A1E00;cursor:pointer;
-  background:radial-gradient(circle at 40% 35%,#FFE6A6,var(--sun) 58%,#E08A10);box-shadow:0 5px 0 rgba(29,35,64,.25);display:grid;place-items:center;text-align:center;padding:6px}
-.skcol{display:grid;gap:8px}
-.sk.mid{width:58px;height:58px;font-size:11px;background:radial-gradient(circle at 40% 35%,#FFD1C2,#FF7A4D 58%,#C2401A);color:#3A0E00}
-.sk.small{width:52px;height:52px;font-size:11px;background:radial-gradient(circle at 40% 35%,#D9F7FF,var(--sky) 60%,#2C93C2);color:#063049}
-.sk.on{background:radial-gradient(circle at 40% 35%,#D6FFE8,var(--leaf) 60%,#22915A);color:#043219}
-.sk:disabled{filter:grayscale(.8) brightness(.85);cursor:default}
+.skills{right:12px;bottom:24px;display:flex;gap:14px;align-items:flex-end;pointer-events:auto}
+.sk{position:relative;width:70px;height:70px;border-radius:50%;border:3px solid #F2C14E;cursor:pointer;color:#fff;padding:0;display:grid;place-items:center;
+  background:radial-gradient(circle at 50% 38%,color-mix(in srgb,var(--c,#FFB347) 62%,#1D2340) 0%,#1D2340 74%);
+  box-shadow:0 0 0 2px rgba(29,35,64,.6),0 0 16px color-mix(in srgb,var(--c,#FFB347) 55%,transparent),0 5px 0 rgba(29,35,64,.3)}
+.sk .ico{position:relative;width:54%;height:54%;display:grid;place-items:center;filter:drop-shadow(0 0 5px var(--c,#FFB347))}
+.sk .ico svg{width:100%;height:100%;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.skcol{display:grid;gap:22px}
+.sk.mid{width:56px;height:56px}
+.sk.small{width:48px;height:48px;--c:#58C7F3;border-color:#BFE8F7}
+.sk.on{--c:#4FE39A;border-color:#4FE39A}
+.sk:disabled{filter:grayscale(.65) brightness(.8);cursor:default}
 .sk .cd{position:absolute;inset:0;border-radius:50%;background:conic-gradient(rgba(29,35,64,.6) var(--p,0%),transparent 0)}
-.sk span{position:relative}
+.sk span{position:absolute;left:50%;bottom:-16px;transform:translateX(-50%);white-space:nowrap;font:800 10px/1 Nunito,sans-serif;color:#fff;text-shadow:0 1px 2px #1D2340,0 0 4px #1D2340}
 .toast{left:50%;top:58px;transform:translateX(-50%);background:var(--ink);color:#FFE7A6;font-family:var(--display);font-size:17px;padding:6px 16px;border-radius:999px;white-space:nowrap}
 .boss{left:50%;bottom:12px;transform:translateX(-50%);width:min(380px,48%);background:rgba(29,35,64,.82);border-radius:12px;padding:6px 10px;color:#fff;font-size:12px;text-align:center}
 .boss .bar{height:11px;margin-top:4px}.boss .bar i{background:linear-gradient(#FF9DB8,var(--berry))}
@@ -94,6 +97,8 @@ canvas#ov{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
 .pick{position:absolute;inset:0;background:rgba(29,35,64,.55);display:grid;place-items:center;padding:16px;pointer-events:auto}
 .pick .box{background:var(--panel);border-radius:18px;padding:16px;max-width:680px;width:100%;display:grid;gap:12px}
 .pick h2{margin:0;font:400 26px var(--display);color:var(--ink)}
+.genders{display:flex;gap:8px;justify-content:center}.genders button{border:3px solid var(--line);background:var(--panel-2);border-radius:999px;padding:7px 22px;font:400 17px var(--display);color:var(--ink);cursor:pointer}
+.genders button[aria-pressed="true"]{background:var(--ink);color:#FFE7A6;border-color:var(--ink)}
 .classes{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}
 .classes button{display:grid;gap:4px;justify-items:center;text-align:center;background:var(--panel-2);border:3px solid var(--line);border-radius:14px;padding:10px;cursor:pointer;font:inherit;color:inherit}
 .classes button:hover,.classes button:focus-visible{border-color:var(--sun)}
@@ -139,6 +144,7 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--ink);outline-of
       <div class="box">
         <h2>Choose your hero</h2>
         <p class="hint">Explore the island, fight monsters, hatch pets and team up with other players on the world boss. Walk with WASD or the arrow keys, or click and tap where you want to go.</p>
+        <div class="genders" id="genders" role="group" aria-label="Hero look"><button type="button" data-g="f">Female</button><button type="button" data-g="m">Male</button></div>
         <div class="classes" id="classes"></div>
       </div>
     </div>
@@ -470,8 +476,8 @@ async function init3d(onProgress){
     fragmentShader:"uniform vec3 top;uniform vec3 mid;uniform vec3 bot;uniform vec3 sunDir;varying vec3 vP;void main(){float h=vP.y;vec3 c=h>0.?mix(mid,top,smoothstep(0.,.6,h)):mix(mid,bot,smoothstep(0.,-.15,h));float s=max(dot(vP,sunDir),0.);c+=vec3(1.,.93,.75)*(pow(s,64.)*1.2+pow(s,8.)*.18);gl_FragColor=vec4(c,1.);}"}));
   sky.renderOrder=-1;scene.add(sky);skyDome=sky;
   camera=new THREE.PerspectiveCamera(55,1,.1,420);
-  scene.add(new THREE.HemisphereLight("#FFFFFF","#A9D69B",1.25));
-  sun=new THREE.DirectionalLight("#FFF1D6",1.45);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);const sc=sun.shadow.camera;sc.left=-20;sc.right=20;sc.top=20;sc.bottom=-20;sc.near=1;sc.far=70;sun.shadow.bias=-.0008;
+  scene.add(new THREE.HemisphereLight("#FFFFFF","#A9D69B",1.1));
+  sun=new THREE.DirectionalLight("#FFF1D6",1.38);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);const sc=sun.shadow.camera;sc.left=-20;sc.right=20;sc.top=20;sc.bottom=-20;sc.near=1;sc.far=70;sun.shadow.bias=-.0008;
   scene.add(sun);scene.add(sun.target);
   buildTerrain();
   water=new THREE.Mesh(new THREE.PlaneGeometry(400,400),new THREE.MeshPhongMaterial({color:"#3DB6EC",transparent:true,opacity:.78,shininess:120,specular:"#FFFFFF"}));
@@ -484,18 +490,25 @@ async function init3d(onProgress){
   await Promise.all(jobs);
   [["tree_oak",11,"#2C6B2A","#A6D152"],["tree_default",23,"#2F7330","#B4DA5C"],["tree_detailed",37,"#356E2C","#C2D865"],["tree_fat_fall",53,"#3B7A33","#9DCC55"]].forEach(([n,sd,a,b])=>{propTpl[n]=makeTree(sd,a,b);});
   placeProps();buildGrass();buildScenery();initParticles();initPost();await loadVrmBufs();
-  loadHeroVrm().then(()=>{if(!HERO_VRM)return;if(meChar)attachVrm(meChar);Object.values(peerChars).forEach(attachVrm);buildVrmShots();});
+  loadHeroVrm().then(()=>{if(!HERO_VRM&&!HERO_VRM_M)return;if(meChar)attachVrm(meChar);Object.values(peerChars).forEach(attachVrm);buildVrmShots();});
   boss3=makeBoss3();scene.add(boss3);
   ready3d=true;}
 /* the island: one smooth mesh with rolling hills; colours blend between neighbouring tiles */
-const GROUNDCOL=["#2E7FB8","#55BFE0","#EAD49A","#86B844","#6A9E3A","#A98A62","#CFC09C"];
+const GROUNDCOL=["#2E7FB8","#55BFE0","#E2C98E","#7FB443","#679A3A","#A98A62","#CDBB95"];
 function buildTerrain(){const W1=N+1,pos=new Float32Array(W1*W1*3),col=new Float32Array(W1*W1*3),idx=[],c=new THREE.Color(),acc=new THREE.Color(),tmp=new THREE.Color();
   for(let vy=0;vy<=N;vy++)for(let vx=0;vx<=N;vx++){const i=vy*W1+vx;pos[i*3]=vx;pos[i*3+1]=HV[i];pos[i*3+2]=vy;
     acc.setRGB(0,0,0);for(const [dx,dy] of [[-1,-1],[0,-1],[-1,0],[0,0]]){tmp.set(GROUNDCOL[tileAt(vx+dx,vy+dy)]);acc.r+=tmp.r/4;acc.g+=tmp.g/4;acc.b+=tmp.b/4;}
     const n=(fbm(vx/4+30,vy/4+70)-.5)*.16,h=HV[i];acc.offsetHSL(0,0,n+(h>1?Math.min(.08,(h-1)*.04):0));col[i*3]=acc.r;col[i*3+1]=acc.g;col[i*3+2]=acc.b;}
   for(let y=0;y<N;y++)for(let x=0;x<N;x++){const a=y*W1+x,b=a+1,c2=a+W1,d=c2+1;idx.push(a,c2,b,b,c2,d);}
   const g=new THREE.BufferGeometry();g.setAttribute("position",new THREE.BufferAttribute(pos,3));g.setAttribute("color",new THREE.BufferAttribute(col,3));g.setIndex(idx);g.computeVertexNormals();
-  const m=new THREE.Mesh(g,new THREE.MeshToonMaterial({vertexColors:true,gradientMap:toonGrad()}));m.receiveShadow=true;scene.add(m);terrain3=m;}
+  const uv=new Float32Array(W1*W1*2);for(let i=0;i<W1*W1;i++){uv[i*2]=pos[i*3]/3;uv[i*2+1]=pos[i*3+2]/3;}g.setAttribute("uv",new THREE.BufferAttribute(uv,2));
+  const m=new THREE.Mesh(g,new THREE.MeshToonMaterial({vertexColors:true,gradientMap:toonGrad(),map:groundTex()}));m.receiveShadow=true;scene.add(m);terrain3=m;}
+/* fine grain, soft patches and small pebbles so the ground isn't flat colour */
+function groundTex(){const c=document.createElement("canvas");c.width=c.height=256;const g=c.getContext("2d"),R=rng(77),id=g.createImageData(256,256),a=id.data;
+  for(let i=0;i<a.length;i+=4){const v=226+(R()-.5)*34;a[i]=a[i+1]=a[i+2]=v;a[i+3]=255;}g.putImageData(id,0,0);
+  for(let i=0;i<70;i++){const x=R()*256,y=R()*256,r=10+R()*28,gr=g.createRadialGradient(x,y,0,x,y,r);gr.addColorStop(0,R()<.55?"rgba(80,70,50,.16)":"rgba(255,255,240,.16)");gr.addColorStop(1,"rgba(0,0,0,0)");g.fillStyle=gr;g.fillRect(x-r,y-r,r*2,r*2);}
+  for(let i=0;i<150;i++){const x=R()*256,y=R()*256,r=1+R()*2.2;g.fillStyle=`rgba(${70+R()*40|0},${60+R()*30|0},${45+R()*20|0},.5)`;g.beginPath();g.ellipse(x,y,r*1.3,r,R()*3,0,7);g.fill();g.fillStyle="rgba(255,255,255,.3)";g.beginPath();g.arc(x-r*.3,y-r*.3,r*.45,0,7);g.fill();}
+  const t=new THREE.CanvasTexture(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.encoding=THREE.sRGBEncoding;t.anisotropy=8;return t;}
 /* cel shading: three flat light bands, plus dark ink outlines on characters, trees and monsters */
 let _grad=null;function toonGrad(){if(_grad)return _grad;const d=new Uint8Array([105,105,105,255, 165,165,165,255, 222,222,222,255, 255,255,255,255]);_grad=new THREE.DataTexture(d,4,1,THREE.RGBAFormat);_grad.minFilter=_grad.magFilter=THREE.LinearFilter;_grad.needsUpdate=true;return _grad;}
 const OUTLINE={};function outlineMat(th){const k=th.toFixed(3);if(OUTLINE[k])return OUTLINE[k];const m=new THREE.MeshBasicMaterial({color:"#2B2440",side:THREE.BackSide});
@@ -530,6 +543,11 @@ const HERO_LOOK={
     cloth:"#F6FBFF",cloth2:"#2F7FD6",trim:"#5CC8F5",metal:"#FFFFFF",cape:"#2F7FD6",legs:"#FFFFFF",boot:"#2F6FC0",glove:"#FFE9DA",style:"twintails",outfit:"sailor",backLen:.85,sideLen:1.05},
   ember:{skin:"#FFE3CC",hair:"#D3342C",hair2:"#F0603E",hairHi:"#FFC09A",brow:"#8A1F18",eye:"#F08A1C",eyeDk:"#6E2306",eyeLt:"#FFE58F",
     cloth:"#3B2A55",cloth2:"#5A3F80",trim:"#FF9A3C",metal:"#FFD166",cape:"#FF7A3C",legs:"#231A36",boot:"#4A2E22",glove:"#FFE3CC",style:"ponytail",outfit:"mage",backLen:.9,sideLen:1.1}};
+/* male looks (used until a male VRoid model is added at assets/v/hero-male.vrm) */
+HERO_LOOK.knight_m=HERO_LOOK.knight;
+HERO_LOOK.tide_m=Object.assign({},HERO_LOOK.tide,{legs:"#2F4A78",boot:"#2F6FC0",style:"short",outfit:"mage",backLen:.5,sideLen:.62,cloth:"#F2F8FF",cloth2:"#2F7FD6",trim:"#5CC8F5"});
+HERO_LOOK.ember_m=Object.assign({},HERO_LOOK.ember,{cloth:"#8A2E28",cloth2:"#4A1C1A",metal:"#9A6A44",cape:"#FF7A3C",legs:"#2B2230",glove:"#6A4330",style:"spiky",outfit:"knight",backLen:.5,sideLen:.62});
+const gender=()=>S.gender==="m"?"m":"f";
 /* toon material with a soft rim light, and ink lines of constant width */
 const CMAT={};
 function cmat(col,two){const key=col+(two?"2":"");if(CMAT[key])return CMAT[key];const m=new THREE.MeshToonMaterial({color:col,gradientMap:toonGrad(),side:two?THREE.DoubleSide:THREE.FrontSide});
@@ -590,7 +608,7 @@ function makeWeapon(cls){const g=new THREE.Group();
     CP(g,CYL,"#F4E6C8",-.354,0,0,.004,.83,.004,0);CP(g,CYL,"#3A2418",0,0,0,.03,.12,.03,.005);
     for(const k of [-1,1])glowBall(g,"#FF9A3C",-.36,k*.41,0,.025);glowBall(g,"#FFB347",0,0,.035,.02);}
   return g;}
-function makeChar(clsKey,outfitId){const L=HERO_LOOK[clsKey]||HERO_LOOK.knight,root=new THREE.Group(),body=new THREE.Group();root.add(body);
+function makeChar(clsKey,outfitId,g){g=g==='m'?'m':'f';const L=HERO_LOOK[g==='m'?clsKey+'_m':clsKey]||HERO_LOOK[clsKey]||HERO_LOOK.knight,root=new THREE.Group(),body=new THREE.Group();root.add(body);
   const cloth=[],sway=[],R=.2,O=L.outfit,BOW="#FF5D7A";
   /* legs (pivot at the hip) */
   const legs=[-1,1].map(k=>{const lg=new THREE.Group();lg.position.set(k*.085,.82,0);body.add(lg);
@@ -646,7 +664,7 @@ function makeChar(clsKey,outfitId){const L=HERO_LOOK[clsKey]||HERO_LOOK.knight,r
   {const wc=makeWeapon(clsKey);if(clsKey==="ember"){wc.rotation.set(0,-Math.PI/2,0);wc.position.set(0,0,.03);}else if(clsKey==="tide"){wc.rotation.set(.2,0,-.3);wc.position.set(0,0,.02);}else{wc.rotation.set(Math.PI*.62,0,0);wc.position.set(0,0,.02);}hand.add(wc);}
   const hatG=new THREE.Group();hatG.position.y=-.1;hatG.scale.setScalar(.6);head.add(hatG);
   const fr=new THREE.Mesh(new THREE.RingGeometry(.42,.52,32),new THREE.MeshBasicMaterial({color:"#ffffff",transparent:true,opacity:.7}));fr.rotation.x=-Math.PI/2;fr.position.y=.03;fr.visible=false;root.add(fr);
-  const c={root,body,legs,arms,torso,head,face,clothParts:cloth,sway,capeG,cur:"idle",st:0,t:Math.random()*9,cls:clsKey,scale:1,hatG,hatId:null,ring:fr,blinkT:2+Math.random()*3,mood:"n",
+  const c={root,body,legs,arms,torso,head,face,clothParts:cloth,sway,capeG,g,cur:"idle",st:0,t:Math.random()*9,cls:clsKey,scale:1,hatG,hatId:null,ring:fr,blinkT:2+Math.random()*3,mood:"n",
     recolor(o){const col=o.body||L.cloth;cloth.forEach(m=>{m.material=cmat(col);});}};
   c.mixer={update:dt=>animHero(c,dt)};
   setHat(c,outfitId);scene.add(root);return c;}
@@ -659,10 +677,11 @@ async function loadVrmBufs(){for(const k of ["knight","tide","ember"]){const v=a
 function parseVrm(buf){return new Promise((res,rej)=>{if(!window.THREE_VRM)return rej(new Error("The VRM loader did not load"));const ld=new THREE.GLTFLoader();ld.register(p=>new THREE_VRM.VRMLoaderPlugin(p));
   ld.parse(buf.slice(0),"",g=>{const v=g.userData.vrm;if(!v)return rej(new Error("That file isn't a VRM model"));try{THREE_VRM.VRMUtils.removeUnnecessaryJoints(g.scene);}catch(e){}
     try{if(v.meta&&v.meta.metaVersion==="0")THREE_VRM.VRMUtils.rotateVRM0(v);}catch(e){}res(v);},e=>rej(e&&e.message?e:new Error("Couldn't read that file")));});}
-let HERO_VRM=null;
-async function loadHeroVrm(){const glb=buf=>buf&&buf.byteLength>1000&&new Uint32Array(buf.slice(0,4))[0]===0x46546C67;
-  try{const r=await fetch("assets/v/hero.vrm");if(r.ok&&!/html/.test(r.headers.get("content-type")||"")){const buf=await r.arrayBuffer();if(glb(buf)){HERO_VRM=buf;return;}}}catch(e){}
-  try{const r=await fetch("assets/v/hero.vrm.txt");if(!r.ok)return;const bin=atob((await r.text()).trim());const u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);if(glb(u.buffer))HERO_VRM=u.buffer;}catch(e){}}
+let HERO_VRM=null,HERO_VRM_M=null;
+async function loadHeroVrm(){HERO_VRM=await fetchVrm("assets/v/hero.vrm");HERO_VRM_M=await fetchVrm("assets/v/hero-male.vrm");}
+async function fetchVrm(u0){let out=null;const glb=buf=>buf&&buf.byteLength>1000&&new Uint32Array(buf.slice(0,4))[0]===0x46546C67;
+  try{const r=await fetch(u0);if(r.ok&&!/html/.test(r.headers.get("content-type")||"")){const buf=await r.arrayBuffer();if(glb(buf))return buf;}}catch(e){}
+  try{const r=await fetch(u0+".txt");if(!r.ok)return null;const bin=atob((await r.text()).trim());const u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);if(glb(u.buffer))out=u.buffer;}catch(e){}return out;}
 /* each class gets its own hair colour and clothes on the shared model */
 const VRM_STYLE={knight:{hair:null,Tops:"#7D97E6",Bottoms:"#3A3F5C",Shoes:"#6A4330"},tide:{hair:[.57,.7,.14],Tops:null,Bottoms:"#5AA6F0",Shoes:"#2F6FC0"},ember:{hair:[.01,.8,.06],Tops:"#A88BDA",Bottoms:"#3B2A55",Shoes:"#4A2E22"}};
 const HUE_TEX={};
@@ -675,7 +694,7 @@ function vrmMats(v){const out=[];v.scene.traverse(o=>{if(!o.isMesh)return;(Array
 function styleVrm(v,cls){const st=VRM_STYLE[cls];if(!st)return;vrmMats(v).forEach(m=>{const n=m.name||"";
     if(st.hair&&/HAIR/.test(n)){for(const k of ["map","shadeMultiplyTexture"])if(m[k]&&m[k].image){const key=cls+k+(m[k].uuid||n);m[k]=hueTex(m[k],st.hair[0],st.hair[1],st.hair[2],cls+":"+n+":"+k);}}
     for(const part of ["Tops","Bottoms","Shoes"])if(st[part]&&n.indexOf(part)===0&&m.color)m.color.set(st[part]);});}
-async function attachVrm(c){if(!c||c.vrm||c.vrmLoading)return;const rec=c===meChar?VRM_BUF[c.cls]:null,buf=rec?rec.buf:HERO_VRM;if(!buf)return;c.vrmLoading=true;let v;
+async function attachVrm(c){if(!c||c.vrm||c.vrmLoading)return;const rec=c===meChar?VRM_BUF[c.cls]:null,buf=rec?rec.buf:(c.g==='m'?HERO_VRM_M:HERO_VRM);if(!buf)return;c.vrmLoading=true;let v;
   try{v=await parseVrm(buf);}catch(e){c.vrmLoading=false;if(rec)toast("Couldn't load your VRoid hero: "+e.message);return;}
   c.vrmLoading=false;if(!c.root.parent||c.vrm)return;if(!rec)styleVrm(v,c.cls);attachVrmTo(c,v,!rec);}
 function attachVrmTo(c,v,styled){
@@ -762,7 +781,7 @@ function makeBoss3(){const g=new THREE.Group(),b=new THREE.Group();g.add(b);
 /* knee-high grass: thousands of blades, one draw, swaying in the wind */
 const windU={value:0};
 let grassChunks=[];
-function buildGrass(){const pos=[],col=[],nor=[],idx=[],cb=new THREE.Color("#2B5E1E"),cm=new THREE.Color("#7DAF34"),ct=new THREE.Color("#E2E879");
+function buildGrass(){const pos=[],col=[],nor=[],idx=[],cb=new THREE.Color("#2B5E1E"),cm=new THREE.Color("#72A833"),ct=new THREE.Color("#D2E06A");
   for(let b=0;b<4;b++){const a=b/4*Math.PI*2+b*.9,r=.05+(b%2)*.06,ox=Math.cos(a)*r,oz=Math.sin(a)*r,lean=.16+.1*(b%3),dx=Math.cos(a)*lean,dz=Math.sin(a)*lean,w=.05,h=.8+.2*(b%3)/2;
     const px=-Math.sin(a)*w,pz=Math.cos(a)*w,base=pos.length/3;
     for(let k=0;k<=2;k++){const t=k/2,ww=1-t*.95,cx=ox+dx*t*t,cy=h*t,cz=oz+dz*t*t;pos.push(cx-px*ww,cy,cz-pz*ww,cx+px*ww,cy,cz+pz*ww);
@@ -842,14 +861,14 @@ function toScreen(x,up,y){_v.set(x,groundY(x,y)+up,y).project(camera);if(_v.z>1)
 /* keep 3D objects in step with the game state */
 let meChar=null,peerChars={},mobObjs=new Map(),petObjs={},lastFrame=performance.now();
 function sync3d(dt){
-  if(S.cls){if(!meChar||meChar.cls!==S.cls){if(meChar)scene.remove(meChar.root);meChar=makeChar(S.cls,S.outfit);meChar.ring.visible=true;attachVrm(meChar);}
+  if(S.cls){if(!meChar||meChar.cls!==S.cls||meChar.g!==gender()){if(meChar)scene.remove(meChar.root);meChar=makeChar(S.cls,S.outfit,gender());meChar.ring.visible=true;attachVrm(meChar);}
     setHat(meChar,S.outfit);meChar.root.visible=me.dead<=0||me.dead>2.2;
     const atk=performance.now()-(me.atkAt||0)<380;
     play(meChar,me.dead>0?"die":atk?(S.cls==="ember"?"holding-both-shoot":S.cls==="tide"?"interact-right":"attack-melee-right"):me.moving?"sprint":(S.cls==="ember"?"holding-both":"idle"),me.dead>0||atk);
     placeChar(meChar,me.x,me.y,me.face||0,dt);}
   /* other players */
   const seen=new Set();peers.forEach(p=>{const pr=p.presence;seen.add(p.peer);let c=peerChars[p.peer];
-    if(!c||c.cls!==(pr.cls||"knight")){if(c)scene.remove(c.root);c=peerChars[p.peer]=makeChar(CLASSES[pr.cls]?pr.cls:"knight",pr.outfit);attachVrm(c);}
+    if(!c||c.cls!==(pr.cls||"knight")||c.g!==(pr.g==="m"?"m":"f")){if(c)scene.remove(c.root);c=peerChars[p.peer]=makeChar(CLASSES[pr.cls]?pr.cls:"knight",pr.outfit,pr.g==="m"?"m":"f");attachVrm(c);}
     setHat(c,pr.outfit);const lp=lerpPeer(p);play(c,pr.atk&&Date.now()-pr.atk<400?(pr.cls==="ember"?"holding-both-shoot":"attack-melee-right"):pr.moving?"sprint":"idle",false);placeChar(c,lp.x,lp.y,+pr.face||0,dt);});
   for(const k in peerChars)if(!seen.has(k)){scene.remove(peerChars[k].root);delete peerChars[k];}
   /* monsters */
@@ -883,16 +902,16 @@ function drawOverlay(){ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,W,H);
   if(me.dead>0){ctx.fillStyle="rgba(29,35,64,.35)";ctx.fillRect(0,0,W,H);ctx.fillStyle="#fff";ctx.font="400 28px 'Lilita One',sans-serif";ctx.textAlign="center";ctx.fillText(`Back to the harbor in ${Math.ceil(me.dead)}…`,W/2,H/2);}}
 /* render a hero portrait to an image (hero pick, wardrobe) */
 const VSHOT={};
-async function buildVrmShots(){if(!HERO_VRM)return;for(const k of ["knight","tide","ember"]){if(VSHOT[k])continue;try{const v=await parseVrm(HERO_VRM);styleVrm(v,k);const sc=new THREE.Scene();sc.add(new THREE.HemisphereLight("#FFFFFF","#B8A894",.75));const dl=new THREE.DirectionalLight("#FFF1D6",.85);dl.position.set(2,3,4);sc.add(dl);
-    const prev=scene;scene=sc;const c=makeChar(k,"plain");scene=prev;attachVrmTo(c,v,true);c.cur="idle";for(let i=0;i<20;i++)animVrm(c,.03);VSHOT[k]={c,sc};}catch(e){}}
+async function buildVrmShots(){for(const g of ["f","m"]){const B=g==="m"?HERO_VRM_M:HERO_VRM;if(!B)continue;for(const k0 of ["knight","tide","ember"]){const k=k0+(g==="m"?"_m":"");if(VSHOT[k])continue;try{const v=await parseVrm(B);styleVrm(v,k0);const sc=new THREE.Scene();sc.add(new THREE.HemisphereLight("#FFFFFF","#B8A894",.75));const dl=new THREE.DirectionalLight("#FFF1D6",.85);dl.position.set(2,3,4);sc.add(dl);
+    const prev=scene;scene=sc;const c=makeChar(k0,"plain",g);scene=prev;attachVrmTo(c,v,true);c.cur="idle";for(let i=0;i<20;i++)animVrm(c,.03);VSHOT[k]={c,sc};}catch(e){}}}
   for(const key in SHOTS)delete SHOTS[key];if($("#pick")&&!$("#pick").hidden)pickClass();if(tab==="wardrobe")renderCamp();}
-function heroShot(cls,outfitId,S0,rot){const Z=S0||256;let sc,c;const V=VSHOT[cls];if(V){sc=V.sc;c=V.c;c.hatId=null;setHat(c,outfitId);}else{sc=new THREE.Scene();sc.add(new THREE.HemisphereLight("#FFFFFF","#B8A894",.75));const dl=new THREE.DirectionalLight("#FFF1D6",.85);dl.position.set(2,3,4);sc.add(dl);
-  const prev=scene;scene=sc;c=makeChar(cls,outfitId);scene=prev;c.cur="idle";animHero(c,.01);}c.root.rotation.y=rot==null?-.35:rot;
+function heroShot(cls,outfitId,S0,rot,g){g=g||gender();const Z=S0||256;let sc,c;const V=VSHOT[cls+(g==='m'?'_m':'')];if(V){sc=V.sc;c=V.c;c.hatId=null;setHat(c,outfitId);}else{sc=new THREE.Scene();sc.add(new THREE.HemisphereLight("#FFFFFF","#B8A894",.75));const dl=new THREE.DirectionalLight("#FFF1D6",.85);dl.position.set(2,3,4);sc.add(dl);
+  const prev=scene;scene=sc;c=makeChar(cls,outfitId,g);scene=prev;c.cur="idle";animHero(c,.01);}c.root.rotation.y=rot==null?-.35:rot;
   const cam=new THREE.PerspectiveCamera(30,1,.1,20);if(V){cam.position.set(0,.95,3.3);cam.lookAt(0,.88,0);}else{cam.position.set(0,1.0,3.6);cam.lookAt(0,.9,0);}
   const rt=new THREE.WebGLRenderTarget(Z,Z,{samples:4});rt.texture.encoding=THREE.sRGBEncoding;R3.setRenderTarget(rt);R3.setClearColor(0,0);R3.clear();R3.render(sc,cam);
   const px=new Uint8Array(Z*Z*4);R3.readRenderTargetPixels(rt,0,0,Z,Z,px);R3.setRenderTarget(null);rt.dispose();
-  const cv2=document.createElement("canvas");cv2.width=cv2.height=Z;const g=cv2.getContext("2d"),id=g.createImageData(Z,Z);for(let y=0;y<Z;y++)id.data.set(px.subarray((Z-1-y)*Z*4,(Z-y)*Z*4),y*Z*4);g.putImageData(id,0,0);return cv2.toDataURL();}
-const SHOTS={};const shot=(cls,o)=>SHOTS[cls+o]||(SHOTS[cls+o]=heroShot(cls,o,VSHOT[cls]?384:256));
+  const cv2=document.createElement("canvas");cv2.width=cv2.height=Z;const g2=cv2.getContext("2d"),id=g2.createImageData(Z,Z);for(let y=0;y<Z;y++)id.data.set(px.subarray((Z-1-y)*Z*4,(Z-y)*Z*4),y*Z*4);g2.putImageData(id,0,0);return cv2.toDataURL();}
+const SHOTS={};const shot=(cls,o)=>{const g=gender(),key=cls+o+g;return SHOTS[key]||(SHOTS[key]=heroShot(cls,o,VSHOT[cls+(g==="m"?"_m":"")]?384:256,undefined,g));};
 function initPost(){if(!THREE.EffectComposer||!THREE.UnrealBloomPass||!THREE.GammaCorrectionShader)return;
   try{const pr=Math.min(2,window.devicePixelRatio||1);const rt=new THREE.WebGLRenderTarget(Math.max(1,W*pr),Math.max(1,H*pr),{samples:4,type:THREE.HalfFloatType});
     composer=new THREE.EffectComposer(R3,rt);composer.setPixelRatio(pr);composer.addPass(new THREE.RenderPass(scene,camera));
@@ -966,7 +985,7 @@ function step(now){const dt=Math.min(.1,(now-last)/1000);last=now;t+=dt;
     if(!db&&bossHp()<=0&&boss.spawnAt<Date.now()){if(S.bossPaid!==boss.cycle){S.bossPaid=boss.cycle;S.gems+=15;toast("World boss defeated! +15 pearls");}boss={cycle:boss.cycle+1,max:Math.round(boss.max*1.35),spawnAt:Date.now()+90000};S.bossCycle=boss.cycle;S.bossDmg=0;}
     spawnT-=dt;if(spawnT<=0){spawnT=1.5;spawnMobs();checkBossCycle();}
     S.x=me.x;S.y=me.y;
-    presT-=dt;if(room&&presT<=0){presT=.1;const pr={x:+me.x.toFixed(2),y:+me.y.toFixed(2),dir:me.dir,face:+(me.face||0).toFixed(2),atk:me.atkAt?Math.round(Date.now()-(performance.now()-me.atkAt)):0,moving:me.moving,cls:S.cls,outfit:S.outfit,lv:S.lv,uid:myId||null};const k=JSON.stringify(pr);if(k!==lastPres){lastPres=k;room.presence(pr).catch(()=>{});}}}
+    presT-=dt;if(room&&presT<=0){presT=.1;const pr={x:+me.x.toFixed(2),y:+me.y.toFixed(2),dir:me.dir,face:+(me.face||0).toFixed(2),atk:me.atkAt?Math.round(Date.now()-(performance.now()-me.atkAt)):0,moving:me.moving,cls:S.cls,outfit:S.outfit,g:gender(),lv:S.lv,uid:myId||null};const k=JSON.stringify(pr);if(k!==lastPres){lastPres=k;room.presence(pr).catch(()=>{});}}}
   cam.x+=(me.x-cam.x)*Math.min(1,dt*6);cam.y+=(me.y-cam.y)*Math.min(1,dt*6);
   fx.forEach(f=>{f.life-=dt*(f.kind?2.2:1.1);if(!f.kind)f.y+=f.vy*dt;});fx=fx.filter(f=>f.life>0);
   draw();drawMini();uiT+=dt;saveT+=dt;if(uiT>.2){uiT=0;renderHud();}if(saveT>4){saveT=0;save();pushHero();}
@@ -978,9 +997,9 @@ function toast(m){const e=$("#toast");e.textContent=m;e.hidden=false;clearTimeou
 function renderHud(){if(!S.cls)return;const s=stats();$("#meLv").textContent=`Lv ${S.lv} · ${cls().name}`;$("#hpBar").style.width=Math.max(0,me.hp/s.maxHp*100)+"%";$("#xpBar").style.width=(S.xp/xpNeed(S.lv)*100)+"%";
   $("#gold").textContent=fmt(S.gold);$("#gems").textContent=fmt(S.gems);
   const z=ZONES[zoneAt(me.x,me.y)];$("#zone").innerHTML="";$("#zone").append(document.createTextNode(z.name));const sm=document.createElement("small");sm.textContent=z.sub;$("#zone").append(sm);
-  const b=$("#skillBtn");b.disabled=skillCd>0||me.dead>0;$("#skillCd").style.setProperty("--p",(skillCd/SKILL_CD*100)+"%");$("#skillName").textContent=cls().skill;
-  $("#skill2Btn").disabled=skill2Cd>0||me.dead>0;$("#skill2Cd").style.setProperty("--p",(skill2Cd/SKILL2_CD*100)+"%");$("#skill2Name").textContent=cls().skill2;
-  $("#skill3Btn").disabled=skill3Cd>0||me.dead>0;$("#skill3Cd").style.setProperty("--p",(skill3Cd/SKILL3_CD*100)+"%");$("#skill3Name").textContent=cls().skill3;
+  const b=$("#skillBtn");b.disabled=skillCd>0||me.dead>0;$("#skillCd").style.setProperty("--p",(skillCd/SKILL_CD*100)+"%");$("#skillName").textContent=cls().skill;setIco("skillBtn",cls().skill);
+  $("#skill2Btn").disabled=skill2Cd>0||me.dead>0;$("#skill2Cd").style.setProperty("--p",(skill2Cd/SKILL2_CD*100)+"%");$("#skill2Name").textContent=cls().skill2;setIco("skill2Btn",cls().skill2);
+  $("#skill3Btn").disabled=skill3Cd>0||me.dead>0;$("#skill3Cd").style.setProperty("--p",(skill3Cd/SKILL3_CD*100)+"%");$("#skill3Name").textContent=cls().skill3;setIco("skill3Btn",cls().skill3);
   $("#huntBtn").classList.toggle("on",!!S.hunt);
   const bb=$("#bossBox"),near=Math.hypot(me.x-BOSS.tx,me.y-BOSS.ty)<16;
   if(near||(bossAlive()&&peers.length)){bb.hidden=false;const left=Math.ceil((boss.spawnAt-Date.now())/1000);
@@ -996,7 +1015,7 @@ function renderCamp(){const c=$("#campBody");document.querySelectorAll("#tabs bu
     <div class="grid">${PETS.map(p=>{const lv=S.pets[p.id]||0,eq=S.team.includes(p.id);return `<button class="card ${eq?"eq":""} ${lv?"":"locked"}" type="button" data-pet="${p.id}" ${lv?"":"disabled"}><canvas width="152" height="152" data-pdraw="${p.id}"></canvas><h4>${lv?p.name:"Not found yet"}</h4><span class="tag r-${p.r}">${RAR[p.r].label}</span><span class="hint">${lv?`Lv ${lv}${eq?" · following you":""}`:""}</span></button>`;}).join("")}</div>`;
     c.querySelectorAll("[data-pdraw]").forEach(cn=>{const p=PETS.find(x=>x.id===cn.dataset.pdraw),g=cn.getContext("2d");drawInto(g,()=>{if(S.pets[p.id])drawPet(76,72,44,p,0);else{C(76,76,40,"#EAD9BC");g.fillStyle="#B9A486";g.font="400 44px 'Lilita One',sans-serif";g.textAlign="center";g.fillText("?",76,92);}});});
     const eg=$("#eggCv").getContext("2d");drawInto(eg,()=>{E(52,56,32,42,"#FFF4DA");for(let i=0;i<5;i++)C(30+i*11,48+(i%2)*18,6,"#58C7F3");});}
-  else if(tab==="wardrobe"){c.innerHTML=`<p class="hint">Outfits unlock as you level up. Each gives a small bonus, and other players see what you wear.</p><div class="grid">${OUTFITS.map(o=>{const open=S.lv>=o.lv,on=S.outfit===o.id;return `<button class="card ${on?"eq":""} ${open?"":"locked"}" type="button" data-outfit="${o.id}" ${open?"":"disabled"}><img src="${ready3d?shot(S.cls||"knight",o.id):""}" alt="" width="96" height="96" style="width:96px;height:96px;object-fit:contain"><h4>${o.name}</h4><span class="hint">${open?o.bonus:`Level ${o.lv}`}${on?" · wearing":""}</span></button>`;}).join("")}</div>
+  else if(tab==="wardrobe"){c.innerHTML=`<div class="genders" role="group" aria-label="Hero look" style="justify-content:flex-start;margin-bottom:8px"><button type="button" data-wg="f" aria-pressed="${gender()==="f"}">Female</button><button type="button" data-wg="m" aria-pressed="${gender()==="m"}">Male</button></div><p class="hint">Outfits unlock as you level up. Each gives a small bonus, and other players see what you wear.</p><div class="grid">${OUTFITS.map(o=>{const open=S.lv>=o.lv,on=S.outfit===o.id;return `<button class="card ${on?"eq":""} ${open?"":"locked"}" type="button" data-outfit="${o.id}" ${open?"":"disabled"}><img src="${ready3d?shot(S.cls||"knight",o.id):""}" alt="" width="96" height="96" style="width:96px;height:96px;object-fit:contain"><h4>${o.name}</h4><span class="hint">${open?o.bonus:`Level ${o.lv}`}${on?" · wearing":""}</span></button>`;}).join("")}</div>
   <div class="vrmBox"><b>Your own anime hero (VRoid)</b><span class="hint">Make a character in VRoid Studio (free), choose Export → VRM, then load the file here. It becomes your ${(CLASSES[S.cls]||{}).name||"hero"} on this device, with your weapon and outfit hat. Other players still see the built-in hero for now.</span>
   <div class="row"><button type="button" data-vrm="load">Load .vrm file</button>${VRM_BUF[S.cls]?`<button type="button" class="alt" data-vrm="clear">Use the built-in hero</button>`:""}<span class="hint" id="vrmMsg">${VRM_BUF[S.cls]?"Using: "+escapeHtml(VRM_BUF[S.cls].name||"your model"):""}</span></div>
   <input type="file" id="vrmIn" accept=".vrm" hidden></div>`;
@@ -1016,6 +1035,7 @@ $("#campBody").addEventListener("click",e=>{const b=e.target.closest("button");i
   else if(b.dataset.outfit){const o=OUTFITS.find(x=>x.id===b.dataset.outfit);if(S.lv<o.lv)return;S.outfit=o.id;renderCamp();save();pushHero(true);}});
 function escapeHtml(t){return String(t).replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]));}
 function respawnChar(){if(meChar){scene.remove(meChar.root);meChar=null;}}
+$("#campBody").addEventListener("click",e=>{const b=e.target.closest("button[data-wg]");if(!b)return;S.gender=b.dataset.wg;respawnChar();renderCamp();save();pushHero(true);});
 $("#campBody").addEventListener("click",async e=>{const b=e.target.closest("button[data-vrm]");if(!b||!S.cls)return;
   if(b.dataset.vrm==="load"){const i=$("#vrmIn");if(i)i.click();}
   else{delete VRM_BUF[S.cls];try{await vrmPut(S.cls,null);}catch(err){}respawnChar();renderCamp();toast("Back to the built-in hero");}});
@@ -1024,6 +1044,15 @@ $("#campBody").addEventListener("change",async e=>{if(e.target.id!=="vrmIn"||!S.
   if(msg)msg.textContent="Loading "+f.name+"…";
   try{const buf=await f.arrayBuffer();await parseVrm(buf);const rec={buf,name:f.name};VRM_BUF[S.cls]=rec;try{await vrmPut(S.cls,rec);}catch(err){}respawnChar();renderCamp();toast("Your VRoid hero is ready!");}
   catch(err){if(msg)msg.textContent="Couldn't use that file: "+(err&&err.message||"unknown error");}});
+const ICONS={"Thunder Slam":'<path d="M13 2 4 14h7l-1 8 9-12h-7z"/>',"Whirlwind":'<path d="M4 12a8 8 0 1 1 8 8"/><path d="M8 12a4 4 0 1 1 4 4"/>',"Rally":'<path d="M6 21V3"/><path d="M6 4h11l-3 4 3 4H6"/>',
+  "Tide Surge":'<path d="M2 15c3 0 3-3 6-3s3 3 6 3 3-3 6-3"/><path d="M2 20c3 0 3-3 6-3s3 3 6 3 3-3 6-3"/><path d="M8 9c0-3 3-6 7-6-2 2-2 4 0 6"/>',"Frost Nova":'<path d="M12 2v20M3.3 7l17.4 10M20.7 7 3.3 17"/><path d="M9 4l3 3 3-3M9 20l3-3 3 3"/>',
+  "Bubble Shield":'<path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6z"/><circle cx="12" cy="11" r="3"/>',"Ember Rain":'<circle cx="15" cy="15" r="5"/><path d="M3 3l8 8M7 3l6 6M3 7l6 6"/>',
+  "Fire Burst":'<path d="M12 22c4 0 7-3 7-7 0-5-5-7-5-12-3 2-5 5-5 8-1-1-2-2-2-4-2 2-2 5-2 8 0 4 3 7 7 7z"/>',"Second Wind":'<path d="M12 20s-7-4.5-7-10a4 4 0 0 1 7-2.5A4 4 0 0 1 19 10c0 5.5-7 10-7 10z"/><path d="M9 11h6M12 8v6"/>',
+  "Auto hunt":'<circle cx="12" cy="12" r="7"/><path d="M12 2v5M12 17v5M2 12h5M17 12h5"/>',"Home":'<path d="M3 11 12 4l9 7"/><path d="M5 10v10h5v-6h4v6h5V10"/>',_:'<path d="M12 3v18M3 12h18"/>'};
+const SKC={"Thunder Slam":"#FFD54A","Whirlwind":"#9FD3FF","Rally":"#FF8A5C","Tide Surge":"#4FC3F7","Frost Nova":"#A8E6FF","Bubble Shield":"#7FE8FF","Ember Rain":"#FF6A2A","Fire Burst":"#FF8A3C","Second Wind":"#6FE39A","Auto hunt":"#58C7F3","Home":"#58C7F3"};
+function setIco(id,name){const b=$("#"+id);if(!b||b.dataset.ico===name)return;b.dataset.ico=name;let i=b.querySelector(".ico");if(!i){i=document.createElement("i");i.className="ico";i.setAttribute("aria-hidden","true");b.insertBefore(i,b.querySelector("span"));}
+  i.innerHTML='<svg viewBox="0 0 24 24">'+(ICONS[name]||ICONS._)+'</svg>';if(!b.classList.contains("small"))b.style.setProperty("--c",SKC[name]||"#FFB347");}
+setIco("huntBtn","Auto hunt");setIco("homeBtn","Home");
 $("#tabs").addEventListener("click",e=>{const b=e.target.closest("button[data-tab]");if(!b)return;tab=b.dataset.tab;renderCamp();});
 $("#skillBtn").addEventListener("click",useSkill);$("#skill2Btn").addEventListener("click",useSkill2);$("#skill3Btn").addEventListener("click",useSkill3);
 $("#huntBtn").addEventListener("click",()=>{S.hunt=!S.hunt;toast(S.hunt?"Auto hunt on: your hero finds monsters nearby":"Auto hunt off");save();renderHud();});
@@ -1053,8 +1082,9 @@ cv.addEventListener("contextmenu",e=>e.preventDefault());
 let armed=0;$("#resetBtn").addEventListener("click",e=>{if(Date.now()-armed>3000){armed=Date.now();e.target.textContent="Tap again to erase your hero";setTimeout(()=>e.target.textContent="Start over",3000);return;}S=fresh();save();location.reload();});
 
 /* hero choice */
-function pickClass(){$("#pick").hidden=false;$("#classes").innerHTML=Object.entries(CLASSES).map(([k,c])=>`<button type="button" data-cls="${k}" id="cls-${k}"><img src="${shot(k,"plain")}" alt="" width="160" height="160" style="width:160px;height:160px;object-fit:contain"><b>${c.name}</b><small>${c.blurb}</small></button>`).join("");
+function pickClass(){$("#pick").hidden=false;document.querySelectorAll("#genders [data-g]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.g===gender()?"true":"false"));$("#classes").innerHTML=Object.entries(CLASSES).map(([k,c])=>`<button type="button" data-cls="${k}" id="cls-${k}"><img src="${shot(k,"plain")}" alt="" width="160" height="160" style="width:160px;height:160px;object-fit:contain"><b>${c.name}</b><small>${c.blurb}</small></button>`).join("");
 }
+$("#genders").addEventListener("click",e=>{const b=e.target.closest("button[data-g]");if(!b)return;S.gender=b.dataset.g;pickClass();});
 $("#classes").addEventListener("click",e=>{const b=e.target.closest("button[data-cls]");if(!b)return;S.cls=b.dataset.cls;$("#pick").hidden=true;resetHp();renderCamp();save();pushHero(true);toast("Welcome to Ikigai Saga!");sys("Tip: turn on Auto hunt, or click a monster to fight it. The world boss lives north of the harbor.");});
 
 size();

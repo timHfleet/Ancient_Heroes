@@ -18,6 +18,10 @@ Then visit http://localhost:8000.
 - **Tidecaller**: water mage who heals. Tide Surge, Frost Nova, Bubble Shield.
 - **Ember Archer**: ranged fire archer. Ember Rain (a meteor shower), Fire Burst, Second Wind.
 
+## Female or male
+
+Choose Female or Male when you pick your hero, or switch any time in the Wardrobe. Female heroes use the built-in VRoid model. Male heroes use the game's own designs until a male VRoid model is added at `assets/v/hero-male.vrm`; the game picks it up automatically.
+
 ## Your own VRoid hero
 
 Make a character in VRoid Studio (free), choose **Export → Export as VRM**, then in the game open **Wardrobe → Load .vrm file**. Your model replaces the built-in hero, keeps your class weapon, and is animated by the game. It is saved in your browser on that device.
