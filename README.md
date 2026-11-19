@@ -20,7 +20,7 @@ Then visit http://localhost:8000.
 
 ## Female or male
 
-Choose Female or Male when you pick your hero, or switch any time in the Wardrobe. Built-in heroes use one licensed anime VRM, about six to seven heads tall, recolored per class, with class weapons. The same mesh is used for both genders. Pets stay small and round. A VRM you load from the Wardrobe replaces the built-in hero. Idle and walk are posed by the game on the VRM skeleton.
+Choose Female or Male when you pick your hero, or switch any time in the Wardrobe. Built-in heroes use one licensed anime VRM, about six to seven heads tall. Each class wears original armor on that skeleton: a cape, pauldrons, a tunic or chest piece, a belt, greaves, and a class weapon. The same body is used for both genders. Pets stay small and round. A VRM you load from the Wardrobe replaces the built-in hero. Idle and walk are posed by the game on the VRM skeleton.
 
 ## Your own VRoid hero
 
