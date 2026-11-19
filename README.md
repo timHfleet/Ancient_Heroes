@@ -36,7 +36,7 @@ The blue MP bar tracks your main skill. It fills again as the cooldown ends. HP 
 
 - Built with three.js r147 and @pixiv/three-vrm 1.0.6, loaded from jsDelivr. Fonts are Cinzel, Philosopher, Outfit and Nunito from Google Fonts (SIL Open Font License).
 - Hosted as a plain web page, the game plays solo. Multiplayer, chat, the shared world boss and the leaderboard use Claude artifact features and only work in the Claude-hosted version.
-- Nature props and weapon models are by Kenney (CC0). See `assets/*/License.txt`. Trees, grass, sky, characters and effects in the scene are original.
+- Nature props, weapons, and the harbor village (Fantasy Town Kit) are by Kenney (CC0). See `assets/*/License.txt`. Trees, grass, sky, characters and effects in the scene are original.
 - `assets/v/hero.vrm` is pixiv's VRM sample model (c) 2022 pixiv Inc. It is not used as a default hero. Its license allows redistribution. See `assets/v/LICENSE.txt`.
 
 ## Deploy on Render
