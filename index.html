@@ -661,18 +661,19 @@ function dressHouse(ox,oz,tint){const x=ox+1.35,z=oz+2.55,gy=groundY(x,z),g=new 
 /* a soft dirt ribbon with ragged edges and pebbles, laid over the grass */
 function pathTex(){const c=document.createElement("canvas");c.width=128;c.height=256;const g=c.getContext("2d"),R=rng(19);
   g.clearRect(0,0,128,256);
-  for(let y=0;y<256;y++){const wob=Math.sin(y*.045)*5+Math.sin(y*.013)*7,half=42+Math.sin(y*.03)*4;
-    for(let x=0;x<128;x++){const e=Math.abs(x-64-wob)/half;if(e>1)continue;const a=Math.pow(1-e,1.6)*(0.9+R()*.06);
-      const peb=R()>.975;const rr=peb?150+R()*24:214+R()*18,gg=peb?124+R()*16:186+R()*16,bb=peb?90:138+R()*14;
-      g.fillStyle=`rgba(${rr|0},${gg|0},${bb|0},${a})`;g.fillRect(x,y,1,1);}}
+  for(let y=0;y<256;y++){const wob=Math.sin(y*.04)*4+Math.sin(y*.011)*6,half=58+Math.sin(y*.025)*3;
+    for(let x=0;x<128;x++){const e=Math.abs(x-64-wob)/half;if(e>1)continue;const a=Math.pow(Math.max(0,1-e),1.35);
+      const peb=R()>.972,shade=R();
+      const rr=peb?168:shade>.55?217:200,gg=peb?144:shade>.55?194:168,bb=peb?104:shade>.55?154:120;
+      g.fillStyle=`rgba(${rr},${gg},${bb},${(a*(peb?.95:.92)).toFixed(3)})`;g.fillRect(x,y,1,1);}}
   const t=new THREE.CanvasTexture(c);t.wrapT=THREE.RepeatWrapping;t.encoding=THREE.sRGBEncoding;return t;}
-function layPaths(){const tex=pathTex(),mat=new THREE.MeshLambertMaterial({map:tex,color:"#E7C99A",transparent:true,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-2});
-  const ribbon=(x0,z0,x1,z1,width)=>{const steps=Math.max(2,Math.ceil(Math.hypot(x1-x0,z1-z0))),dx=x1-x0,dz=z1-z0,len=Math.hypot(dx,dz)||1,px=-dz/len,pz=dx/len,pos=[],uv=[],idx=[];
-    for(let i=0;i<=steps;i++){const t=i/steps,x=x0+dx*t,z=z0+dz*t,y=groundY(x,z)+.045,w=width+Math.sin(t*6.2)*.16;
-      pos.push(x+px*w,y,z+pz*w,x-px*w,groundY(x-px*w,z-pz*w)+.045,z-pz*w);uv.push(0,t*len*.12,1,t*len*.12);if(i<steps){const a=i*2;idx.push(a,a+2,a+1,a+1,a+2,a+3);}}
+function layPaths(){const tex=pathTex(),mat=new THREE.MeshBasicMaterial({map:tex,transparent:true,depthWrite:false,side:THREE.DoubleSide,polygonOffset:true,polygonOffsetFactor:-2,fog:true});
+  const ribbon=(x0,z0,x1,z1,width)=>{const steps=Math.max(2,Math.ceil(Math.hypot(x1-x0,z1-z0)*2)),dx=x1-x0,dz=z1-z0,len=Math.hypot(dx,dz)||1,px=-dz/len,pz=dx/len,pos=[],uv=[],idx=[];
+    for(let i=0;i<=steps;i++){const t=i/steps,x=x0+dx*t,z=z0+dz*t,y=groundY(x,z)+.05,w=width+Math.sin(t*5.2)*.22;
+      pos.push(x+px*w,y,z+pz*w,x-px*w,groundY(x-px*w,z-pz*w)+.05,z-pz*w);uv.push(0,t*len*.1,1,t*len*.1);if(i<steps){const a=i*2;idx.push(a,a+2,a+1,a+1,a+2,a+3);}}
     const geo=new THREE.BufferGeometry();geo.setAttribute("position",new THREE.Float32BufferAttribute(pos,3));geo.setAttribute("uv",new THREE.Float32BufferAttribute(uv,2));geo.setIndex(idx);geo.computeVertexNormals();
-    const m=new THREE.Mesh(geo,mat);m.receiveShadow=true;m.renderOrder=2;scene.add(m);};
-  ribbon(CX+.5,CY-24,CX+.5,CY+9,1.35);ribbon(CX-11,CY+.4,CX+11,CY+.4,1.2);}
+    const m=new THREE.Mesh(geo,mat);m.renderOrder=2;m.frustumCulled=false;scene.add(m);};
+  ribbon(CX+.5,CY-24,CX+.5,CY+9,2.15);ribbon(CX-12,CY+.4,CX+12,CY+.4,1.9);}
 /* ===== stylized anime heroes: about 6.5 heads tall, cel-shaded, with rim light and ink lines ===== */
 const HERO_LOOK={
   knight:{skin:"#F3C7B0",hair:"#8A4A28",hair2:"#C47A45",hairHi:"#F0C48A",brow:"#4A2A18",eye:"#3C86F0",eyeDk:"#15306E",eyeLt:"#A8DCFF",
@@ -827,7 +828,7 @@ async function fetchVrm(u0){let out=null;const glb=buf=>buf&&buf.byteLength>1000
   try{const r=await fetch(u0+".txt");if(!r.ok)return null;const bin=atob((await r.text()).trim());const u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);if(glb(u.buffer))out=u.buffer;}catch(e){}return out;}
 /* each class gets its own hair colour and clothes on the shared model */
 const VRM_STYLE={knight:{hair:null,Tops:"#F3E6D0",Bottoms:"#2A2A38",Shoes:"#2A2A38"},tide:{hair:[.55,.35,.08],Tops:"#F7F4EE",Bottoms:"#F3E6D0",Shoes:"#E8D8C8"},ember:{hair:[.02,.55,.08],Tops:"#F3E6D0",Bottoms:"#2A2A38",Shoes:"#3A2418"}};
-const GEAR={knight:{cloth:"#F3E6D0",ink:"#2A2A38",cape:"#8B2E3A",trim:"#D4A84A",boot:"#2A2A38"},tide:{cloth:"#F7F4EE",ink:"#2A3148",cape:"#F3E6D0",trim:"#D4A84A",boot:"#E8D8C8"},ember:{cloth:"#F7F4EE",ink:"#2A2A38",cape:"#8B2E3A",trim:"#E8C878",boot:"#3A2418"}};
+const GEAR={knight:{cloth:"#F3E6D0",ink:"#2A2A38",cape:"#8B2E3A",trim:"#D4A84A",boot:"#2A2A38"},tide:{cloth:"#F7F4EE",ink:"#2A3148",cape:"#D7EEF6",trim:"#D4A84A",boot:"#E8D8C8"},ember:{cloth:"#F3E6D0",ink:"#2A2A38",cape:"#8B2E3A",trim:"#E8C878",boot:"#3A2418"}};
 const CLOTH_TEX={};
 function clothTex(hex){if(CLOTH_TEX[hex])return CLOTH_TEX[hex];const cv2=document.createElement("canvas");cv2.width=cv2.height=8;const g=cv2.getContext("2d");g.fillStyle=hex;g.fillRect(0,0,8,8);const t=new THREE.CanvasTexture(cv2);t.encoding=THREE.sRGBEncoding;return CLOTH_TEX[hex]=t;}
 let _blobTex=null;
@@ -848,20 +849,25 @@ function bonePin(bone){bone.updateWorldMatrix(true,false);const q=new THREE.Quat
 /* original armor worn on the VRM skeleton so the shared sample reads as a class */
 function dressVrm(c,v){const G=GEAR[c.cls]||GEAR.knight,H=v.humanoid,chest=H.getRawBoneNode("chest")||H.getRawBoneNode("spine"),upper=H.getRawBoneNode("upperChest")||chest,hips=H.getRawBoneNode("hips");
   if(chest){const p=bonePin(chest);
-    if(c.cls==="knight"){CP(p,SPH,G.cloth,0,.02,.07,.17,.15,.09,.005);CP(p,SPH,G.trim,0,.05,.13,.035);CP(p,BOX,G.trim,0,-.04,.11,.15,.012,.018,0);}
-    else if(c.cls==="tide"){CP(p,SPH,G.cloth,0,.04,.05,.16,.18,.1,.005);CP(p,SPH,"#5EF0E8",0,.08,.13,.032);CP(p,CYL,G.trim,0,-.08,0,.13,.02,.1,0);}
-    else{CP(p,SPH,G.cloth,0,.03,.05,.15,.14,.09,.005);CP(p,BOX,G.cape,0,.02,.11,.11,.035,.014,0);CP(p,SPH,G.trim,0,.06,.12,.028);}}
-  for(const [bone,s] of [[H.getRawBoneNode("leftShoulder"),-1],[H.getRawBoneNode("rightShoulder"),1]]){if(!bone)continue;const p=bonePin(bone);CP(p,SPH,c.cls==="ember"?G.cape:G.cloth,s*.03,.04,0,.1,.06,.09,.004);CP(p,SPH,G.trim,s*.05,.07,.03,.034,.02,.034,0);}
-  if(hips){const p=bonePin(hips);CP(p,CYL,G.ink,0,.04,0,.12,.04,.09,.004);CP(p,SPH,G.trim,0,.04,.1,.03);
-    if(c.cls==="tide"){CP(p,BOX,"#F7F4EE",.12,.06,.02,.05,.07,.018,.003);CP(p,BOX,G.trim,.12,.06,.032,.052,.01,.004,0);}
-    const tunic=c.cls==="tide"?"#F3E6D0":G.cloth,th=c.cls==="knight"?.42:.36;CP(p,H_SKIRT,tunic,0,-.12,0,c.cls==="knight"?.22:.18,th,.17,.004);}
-  for(const bone of [H.getRawBoneNode("leftLowerLeg"),H.getRawBoneNode("rightLowerLeg")]){if(!bone)continue;const p=bonePin(bone);CP(p,CYL,G.boot,0,-.12,.02,.05,.18,.055,.004);CP(p,CYL,G.trim,0,-.02,.04,.052,.016,.02,0);CP(p,SPH,G.boot,0,-.22,.05,.055,.03,.08,.003);}
-  for(const name of ["leftUpperArm","rightUpperArm"]){const bone=H.getRawBoneNode(name);if(!bone)continue;const p=bonePin(bone);CP(p,CYL,G.cloth,0,-.11,0,.058,.24,.058,.003);}
-  for(const name of ["leftLowerArm","rightLowerArm"]){const bone=H.getRawBoneNode(name);if(!bone)continue;const p=bonePin(bone);CP(p,CYL,G.ink,0,-.09,0,.046,.18,.046,.003);CP(p,CYL,G.trim,0,-.01,.03,.05,.018,.02,0);}
-  const anchor=upper||chest;if(anchor){const p=bonePin(anchor),cape=new THREE.Group();cape.position.set(0,.06,-.07);p.add(cape);const segs=[];let host=cape;
-    for(let i=0;i<5;i++){const seg=new THREE.Group();seg.position.set(0,i?-0.16:0,0);seg.rotation.x=.08+i*.06;host.add(seg);const w=.5-i*.04;
-      CP(seg,BOX,G.cape,0,-.075,-i*.012,w,.16,.01,.003);CP(seg,BOX,G.trim,-w*.95,-.075,0,.012,.16,.008,0);CP(seg,BOX,G.trim,w*.95,-.075,0,.012,.16,.008,0);segs.push(seg);host=seg;}
-    c.capeG=cape;c.capeSegs=segs;}}
+    CP(p,BOX,G.ink,0,.02,.02,.13,.18,.07,.004);
+    CP(p,BOX,G.cloth,0,.05,.09,.16,.16,.04,.004);
+    CP(p,BOX,G.trim,0,.05,.115,.175,.175,.012,0);
+    CP(p,SPH,c.cls==="tide"?"#5EF0E8":G.trim,0,.1,.12,.032);
+    if(c.cls==="ember")CP(p,BOX,G.cape,0,-.02,.1,.12,.04,.015,0);}
+  for(const [bone,s] of [[H.getRawBoneNode("leftShoulder"),-1],[H.getRawBoneNode("rightShoulder"),1]]){if(!bone)continue;const p=bonePin(bone);
+    const pad=CP(p,SPH,c.cls==="ember"?G.cape:G.cloth,s*.08,.06,0,.13,.08,.12,.004);pad.frustumCulled=false;
+    CP(p,SPH,G.trim,s*.12,.1,.04,.045,.03,.045,0);}
+  if(hips){const p=bonePin(hips);CP(p,CYL,G.ink,0,.02,0,.13,.045,.1,.004);CP(p,SPH,G.trim,0,.02,.11,.032);
+    CP(p,H_SKIRT,G.ink,0,-.06,0,.16,.2,.13,.004);
+    if(c.cls==="tide"){CP(p,BOX,"#F7F4EE",.12,.08,.04,.05,.07,.018,.003);CP(p,BOX,G.trim,.12,.08,.052,.052,.01,.004,0);}}
+  for(const bone of [H.getRawBoneNode("leftLowerLeg"),H.getRawBoneNode("rightLowerLeg")]){if(!bone)continue;const p=bonePin(bone);CP(p,CYL,G.boot,0,-.12,.02,.055,.2,.06,.004);CP(p,CYL,G.trim,0,-.02,.045,.06,.018,.022,0);CP(p,SPH,G.boot,0,-.24,.06,.06,.035,.09,.003);}
+  for(const name of ["leftUpperArm","rightUpperArm"]){const bone=H.getRawBoneNode(name);if(!bone)continue;const p=bonePin(bone);CP(p,CYL,G.ink,0,-.1,0,.055,.16,.055,.003);CP(p,CYL,G.trim,0,-.02,.03,.06,.016,.02,0);}
+  for(const name of ["leftLowerArm","rightLowerArm"]){const bone=H.getRawBoneNode(name);if(!bone)continue;const p=bonePin(bone);CP(p,CYL,G.boot,0,-.09,0,.048,.16,.048,.003);CP(p,CYL,G.trim,0,-.01,.03,.052,.016,.02,0);}
+  const anchor=upper||chest;if(anchor){const p=bonePin(anchor),cape=new THREE.Group();cape.position.set(0,.12,-.12);cape.rotation.y=-Math.PI/2;cape.rotation.x=.22;p.add(cape);
+    const cloth=CP(cape,H_CAPE,G.cape,0,-.62,0,.3,1.28,.22,.004,true);
+    const hems=[CP(cape,BOX,G.trim,-.22,-.62,.16,.14,1.22,.03,0,true),CP(cape,BOX,G.trim,-.22,-.62,-.16,.14,1.22,.03,0,true),CP(cape,BOX,G.trim,-.18,-1.22,0,.05,.04,.4,0,true)];
+    [cloth,...hems].forEach(m=>{m.frustumCulled=false;m.children.forEach(o=>o.frustumCulled=false);});
+    c.capeG=cape;c.capeSegs=null;}}
 async function attachVrm(c){if(!c||c.vrm||c.vrmLoading)return;const rec=c===meChar?VRM_BUF[c.cls]:null;const buf=(rec&&rec.buf)?rec.buf:(c.g==="m"&&HERO_VRM_M?HERO_VRM_M:HERO_VRM);if(!buf)return;c.vrmLoading=true;let v;
   try{v=await parseVrm(buf);}catch(e){c.vrmLoading=false;if(rec)toast("Couldn't load your VRoid hero: "+e.message);return;}
   c.vrmLoading=false;if(!c.root.parent||c.vrm)return;if(!rec)styleVrm(v,c.cls);attachVrmTo(c,v,!rec);}
@@ -927,7 +933,7 @@ function animVrm(c,dt){c.st+=dt;c.t+=dt;const s=c.st,T=c.t,st=c.cur,v=c.vrm,Hm=v
   const k=1-Math.exp(-dt*rate);c.pose=c.pose||{};
   for(const b of VBONES){const n=Hm.getNormalizedBoneNode(b);if(!n)continue;const tg=P[b],cur=c.pose[b]||(c.pose[b]=[0,0,0]);for(let i=0;i<3;i++)cur[i]+=(tg[i]-cur[i])*k;n.rotation.set(cur[0]*sg,cur[1],cur[2]*sg);}
   c.bobS=lerp(c.bobS||0,bob,k);c.swayS=lerp(c.swayS||0,swayX,k);Hd.position.set(c.swayS,c.bobS,0);
-  if(c.capeSegs)c.capeSegs.forEach((seg,i)=>{const amp=(st==="sprint"?.1:.035)*(i+1);seg.rotation.x=.04+i*.045+Math.sin(T*(st==="sprint"?8:1.8)+i*.6)*amp;});
+  if(c.capeG){c.capeG.rotation.y=-Math.PI/2;c.capeG.rotation.x=.2+Math.sin(T*(st==="sprint"?8:1.7))*(st==="sprint"?.14:.045)+(st==="sprint"?.15:0);}
   c.blinkT-=dt;if(c.blinkT<-.12)c.blinkT=2+Math.random()*3;ex("blink",mood==="n"&&c.blinkT<0?1:0);ex("angry",mood==="f"?.55:0);ex("happy",mood==="n"?.2:0);
   v.update(dt);}
 function play(c,name){if(c.cur!==name){c.cur=name;c.st=0;}}
