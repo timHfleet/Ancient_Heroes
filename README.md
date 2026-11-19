@@ -1,6 +1,6 @@
-# Ikigai Saga
+# Ancient Heroes
 
-A 3D anime-style adventure game that runs in the browser. Pick a hero, explore an open island of tall grass, forests and coasts, fight monsters, hatch pets and take on the Coral Titan world boss.
+A bright anime-fantasy adventure that runs in the browser. Pick a hero, explore an open island of meadows, forests and coasts, fight monsters, hatch pets and take on the Coral Titan world boss.
 
 ## Play
 
@@ -20,7 +20,7 @@ Then visit http://localhost:8000.
 
 ## Female or male
 
-Choose Female or Male when you pick your hero, or switch any time in the Wardrobe. Female heroes use the built-in VRoid model. Male heroes use the game's own designs until a male VRoid model is added at `assets/v/hero-male.vrm`; the game picks it up automatically.
+Choose Female or Male when you pick your hero, or switch any time in the Wardrobe. Built-in heroes are original designs, about six to seven heads tall, with capes, gold trim and class weapons. Pets stay small and round. You can still replace your hero with a VRM model from the Wardrobe.
 
 ## Your own VRoid hero
 
@@ -30,13 +30,15 @@ Make a character in VRoid Studio (free), choose **Export → Export as VRM**, th
 
 WASD or arrow keys to move, or click where you want to go. Drag to turn the camera, mouse wheel to zoom. Keys 1, 2, 3 or Space for skills. Enter to chat.
 
+The blue MP bar tracks your main skill. It fills again as the cooldown ends. HP is the red bar and EXP is the gold bar.
+
 ## Notes
 
-- Built with three.js r147 and @pixiv/three-vrm 1.0.6, loaded from jsDelivr.
+- Built with three.js r147 and @pixiv/three-vrm 1.0.6, loaded from jsDelivr. Fonts are Cinzel, Philosopher, Outfit and Nunito from Google Fonts (SIL Open Font License).
 - Hosted as a plain web page, the game plays solo. Multiplayer, chat, the shared world boss and the leaderboard use Claude artifact features and only work in the Claude-hosted version.
-- Nature props and weapon models are by Kenney (CC0). See `assets/*/License.txt`.
-- The built-in heroes use pixiv's VRM sample model (c) 2022 pixiv Inc., whose license allows redistribution and modification. Each class recolors its hair and clothes. See `assets/v/LICENSE.txt`.
+- Nature props and weapon models are by Kenney (CC0). See `assets/*/License.txt`. Trees, grass, sky, characters and effects in the scene are original.
+- `assets/v/hero.vrm` is pixiv's VRM sample model (c) 2022 pixiv Inc. It is not used as a default hero. Its license allows redistribution. See `assets/v/LICENSE.txt`.
 
 ## Deploy on Render
 
-`render.yaml` sets this up as a Render static site: create a new Blueprint on Render and point it at this repository.
+`render.yaml` sets this up as a Render static site. The service slug stays `ikigai-saga` so an existing Blueprint deploy and its URL keep working. To show the new title in the Render dashboard, rename the service's display name there. Changing the `name` field in `render.yaml` would provision a different service.
