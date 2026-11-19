@@ -20,7 +20,7 @@ Then visit http://localhost:8000.
 
 ## Female or male
 
-Choose Female or Male when you pick your hero, or switch any time in the Wardrobe. Built-in heroes are original designs, about six to seven heads tall, with capes, gold trim and class weapons. Pets stay small and round. You can still replace your hero with a VRM model from the Wardrobe.
+Choose Female or Male when you pick your hero, or switch any time in the Wardrobe. Built-in heroes use one licensed anime VRM, about six to seven heads tall, recolored per class, with class weapons. The same mesh is used for both genders. Pets stay small and round. A VRM you load from the Wardrobe replaces the built-in hero. Idle and walk are posed by the game on the VRM skeleton.
 
 ## Your own VRoid hero
 
@@ -36,8 +36,8 @@ The blue MP bar tracks your main skill. It fills again as the cooldown ends. HP 
 
 - Built with three.js r147 and @pixiv/three-vrm 1.0.6, loaded from jsDelivr. Fonts are Cinzel, Philosopher, Outfit and Nunito from Google Fonts (SIL Open Font License).
 - Hosted as a plain web page, the game plays solo. Multiplayer, chat, the shared world boss and the leaderboard use Claude artifact features and only work in the Claude-hosted version.
-- Nature props, weapons, and the harbor village (Fantasy Town Kit) are by Kenney (CC0). See `assets/*/License.txt`. Trees, grass, sky, characters and effects in the scene are original.
-- `assets/v/hero.vrm` is pixiv's VRM sample model (c) 2022 pixiv Inc. It is not used as a default hero. Its license allows redistribution. See `assets/v/LICENSE.txt`.
+- Nature props, weapons, and the harbor village (Fantasy Town Kit) are by Kenney (CC0). Rounder trees, bushes, rocks and flowers in `assets/q/` are from Quaternius's Ultimate Nature Pack (CC0). See `assets/*/License.txt`. Grass, sky, and effects in the scene are original. A few accent trees are still procedural.
+- `assets/v/hero.vrm` is pixiv's VRM sample model (c) 2022 pixiv Inc. It is the default hero for every class. Its VRM 1.0 license allows redistribution and modification. See `assets/v/LICENSE.txt`.
 
 ## Deploy on Render
 
