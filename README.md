@@ -28,9 +28,9 @@ Make a character in VRoid Studio (free), choose **Export → Export as VRM**, th
 
 ## Controls
 
-WASD or arrow keys to move, or click where you want to go. Drag to turn the camera, mouse wheel to zoom. Keys 1, 2, 3 or Space for skills. Enter to chat.
+WASD, the arrow keys, or the on-screen joystick to move. Click where you want to go. Drag to turn the camera, mouse wheel to zoom. The skill wheel holds the basic attack, three skills (keys 1, 2, 3 or Space), auto hunt, and a dodge. Enter to chat. A line starting with `/recruit` is tagged as a recruit message.
 
-The blue MP bar tracks your main skill. It fills again as the cooldown ends. HP is the red bar and EXP is the gold bar.
+The round portrait shows your level, name, and power. The slim green bar is health. Skill buttons sweep a cooldown. Yellow and orange numbers are damage you deal, green is healing, and red is damage you take.
 
 ## Notes
 
