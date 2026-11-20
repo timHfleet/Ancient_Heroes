@@ -12,11 +12,13 @@ python -m http.server 8000
 
 Then visit http://localhost:8000.
 
-## Heroes
+## Jobs
 
-- **Spark Knight**: sword fighter. Thunder Slam, Whirlwind, Rally.
-- **Tidecaller**: water mage who heals. Tide Surge, Frost Nova, Bubble Shield.
-- **Ember Archer**: ranged fire archer. Ember Rain (a meteor shower), Fire Burst, Second Wind.
+- **Swordsman**: sturdy blade fighter up close. Thunder Slam, Whirlwind, Rally.
+- **Gunner**: long-range sharpshooter with a rifle. Bullet Storm (8 quick shots), Grenade, Second Wind.
+- **Assassin**: very fast dagger fighter with high critical chance. Shadow Strike (blinks behind a foe for a guaranteed 6x critical), Blade Flurry, Vanish.
+- **Wizard**: strong spells from afar. Meteor Storm, Frost Nova, Mana Shield.
+- **Priest**: holy healer. Holy Light (heals half your health and strikes nearby foes), Judgment, Blessing.
 
 ## Female or male
 
