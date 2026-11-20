@@ -3,3 +3,8 @@ from the @pixiv/three-vrm examples, with its textures downscaled.
 Its embedded VRM 1.0 license (https://vrm.dev/licenses/1.0/) allows use by everyone,
 corporate commercial use, redistribution, and redistribution of modified versions.
 Credit is not required.
+
+This file is the built-in hero for every class. Class clothes and hair are
+recolored in the game. The same mesh is used for the male option: a separate
+male VRM with a license that allows redistribution in a public game was not
+available. A VRM loaded from the Wardrobe replaces this default.

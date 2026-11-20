@@ -1,6 +1,6 @@
-# Ikigai Saga
+# Ancient Heroes
 
-A 3D anime-style adventure game that runs in the browser. Pick a hero, explore an open island of tall grass, forests and coasts, fight monsters, hatch pets and take on the Coral Titan world boss.
+A bright anime-fantasy adventure that runs in the browser. Pick a hero, explore an open island of meadows, forests and coasts, fight monsters, hatch pets and take on the Coral Titan world boss.
 
 ## Play
 
@@ -20,7 +20,7 @@ Then visit http://localhost:8000.
 
 ## Female or male
 
-Choose Female or Male when you pick your hero, or switch any time in the Wardrobe. Female heroes use the built-in VRoid model. Male heroes use the game's own designs until a male VRoid model is added at `assets/v/hero-male.vrm`; the game picks it up automatically.
+Choose Female or Male when you pick your hero, or switch any time in the Wardrobe. Built-in heroes use one licensed anime VRM, about six to seven heads tall. Each class wears original armor on that skeleton: a cape, pauldrons, a tunic or chest piece, a belt, greaves, and a class weapon. The same body is used for both genders. Pets stay small and round. A VRM you load from the Wardrobe replaces the built-in hero. Idle and walk are posed by the game on the VRM skeleton.
 
 ## Your own VRoid hero
 
@@ -28,15 +28,17 @@ Make a character in VRoid Studio (free), choose **Export → Export as VRM**, th
 
 ## Controls
 
-WASD or arrow keys to move, or click where you want to go. Drag to turn the camera, mouse wheel to zoom. Keys 1, 2, 3 or Space for skills. Enter to chat.
+WASD, the arrow keys, or the on-screen joystick to move. Click where you want to go. Drag to turn the camera, mouse wheel to zoom. The skill wheel holds the basic attack, three skills (keys 1, 2, 3 or Space), auto hunt, and a dodge. Enter to chat. A line starting with `/recruit` is tagged as a recruit message.
+
+The round portrait shows your level, name, and power. The slim green bar is health. Skill buttons sweep a cooldown. Yellow and orange numbers are damage you deal, green is healing, and red is damage you take.
 
 ## Notes
 
-- Built with three.js r147 and @pixiv/three-vrm 1.0.6, loaded from jsDelivr.
+- Built with three.js r147 and @pixiv/three-vrm 1.0.6, loaded from jsDelivr. Fonts are Cinzel, Philosopher, Outfit and Nunito from Google Fonts (SIL Open Font License).
 - Hosted as a plain web page, the game plays solo. Multiplayer, chat, the shared world boss and the leaderboard use Claude artifact features and only work in the Claude-hosted version.
-- Nature props and weapon models are by Kenney (CC0). See `assets/*/License.txt`.
-- The built-in heroes use pixiv's VRM sample model (c) 2022 pixiv Inc., whose license allows redistribution and modification. Each class recolors its hair and clothes. See `assets/v/LICENSE.txt`.
+- Nature props, weapons, and the harbor village (Fantasy Town Kit) are by Kenney (CC0). Rounder trees, bushes, rocks and flowers in `assets/q/` are from Quaternius's Ultimate Nature Pack (CC0). See `assets/*/License.txt`. Grass, the dirt path, sky, class armor, capes, monsters, house banners, and effects are original. A few accent trees are still procedural.
+- `assets/v/hero.vrm` is pixiv's VRM sample model (c) 2022 pixiv Inc. It is the default hero for every class. Its VRM 1.0 license allows redistribution and modification. See `assets/v/LICENSE.txt`.
 
 ## Deploy on Render
 
-`render.yaml` sets this up as a Render static site: create a new Blueprint on Render and point it at this repository.
+`render.yaml` sets this up as a Render static site. The service slug stays `ikigai-saga` so an existing Blueprint deploy and its URL keep working. To show the new title in the Render dashboard, rename the service's display name there. Changing the `name` field in `render.yaml` would provision a different service.

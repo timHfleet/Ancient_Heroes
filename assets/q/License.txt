@@ -1,0 +1,13 @@
+Ultimate Nature Pack (June 2019) by Quaternius
+https://quaternius.com/packs/ultimatenature.html
+
+License: CC0 1.0 Universal
+https://creativecommons.org/publicdomain/zero/1.0/
+
+The OBJ files in this folder are a small subset of that pack
+(common trees, pines, bushes, a mossy rock, and a flower clump).
+No copyright is claimed. Attribution is appreciated and not required.
+
+These meshes are recolored in the game with the project's toon materials.
+The original MTL files are not included because they only store Blender
+diffuse values and no textures.
