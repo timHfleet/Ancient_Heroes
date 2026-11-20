@@ -961,7 +961,7 @@ async function fetchVrm(u0){let out=null;const glb=buf=>buf&&buf.byteLength>1000
   try{const r=await fetch(u0);if(r.ok&&!/html/.test(r.headers.get("content-type")||"")){const buf=await r.arrayBuffer();if(glb(buf))return buf;}}catch(e){}
   try{const r=await fetch(u0+".txt");if(!r.ok)return null;const bin=atob((await r.text()).trim());const u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);if(glb(u.buffer))out=u.buffer;}catch(e){}return out;}
 /* each class gets its own hair colour and clothes on the shared model */
-const VRM_STYLE={knight:{hair:null,Tops:"#F3E6D0",Bottoms:"#2A2A38",Shoes:"#2A2A38"},tide:{hair:[.55,.35,.08],Tops:"#F7F4EE",Bottoms:"#F3E6D0",Shoes:"#E8D8C8"},ember:{hair:[.02,.55,.08],Tops:"#F3E6D0",Bottoms:"#2A2A38",Shoes:"#3A2418"}};
+const VRM_STYLE={knight:{hair:null,Tops:"#7D97E6",Bottoms:"#3A3F5C",Shoes:"#6A4330"},tide:{hair:[.57,.7,.14],Tops:null,Bottoms:"#5AA6F0",Shoes:"#2F6FC0"},ember:{hair:[.01,.8,.06],Tops:"#A88BDA",Bottoms:"#3B2A55",Shoes:"#4A2E22"}};
 const GEAR={knight:{cloth:"#F3E6D0",ink:"#2A2A38",cape:"#8B2E3A",trim:"#D4A84A",boot:"#2A2A38"},tide:{cloth:"#F7F4EE",ink:"#2A3148",cape:"#D7EEF6",trim:"#D4A84A",boot:"#E8D8C8"},ember:{cloth:"#F3E6D0",ink:"#2A2A38",cape:"#8B2E3A",trim:"#E8C878",boot:"#3A2418"}};
 const CLOTH_TEX={};
 function clothTex(hex){if(CLOTH_TEX[hex])return CLOTH_TEX[hex];const cv2=document.createElement("canvas");cv2.width=cv2.height=8;const g=cv2.getContext("2d");g.fillStyle=hex;g.fillRect(0,0,8,8);const t=new THREE.CanvasTexture(cv2);t.encoding=THREE.sRGBEncoding;return CLOTH_TEX[hex]=t;}
@@ -988,8 +988,10 @@ function vrmMats(v){const out=[];v.scene.traverse(o=>{if(!o.isMesh)return;(Array
 function styleVrm(v,cls,lk){const st0=VRM_STYLE[cls];if(!st0)return;lk=lk||{};const hc=HAIR_COLS.find(x=>x.id===lk.hair),hair=hc?hc.h:st0.hair,st=Object.assign({},st0,lk.bottom?{Bottoms:lk.bottom}:{});
   vrmMats(v).forEach(m=>{const n=m.name||"";
     if(hair&&/HAIR/.test(n)){for(const k of ["map","shadeMultiplyTexture"])if(m[k]&&m[k].image){m[k]=hueTex(m[k],hair[0],hair[1],hair[2],(m[k].uuid||n)+":"+k+":"+hair.join(","),hair[3]);}}
-    if(/(^|_)Tops_/.test(n)){m.opacity=0;m.transparent=true;m.depthWrite=false;return;}
-    for(const part of ["Bottoms","Shoes"])if(st[part]&&new RegExp("(^|_)"+part+"_").test(n)){if(m.map)m.map=clothTex(st[part]);if(m.color)m.color.set("#ffffff");if(m.shadeMultiplyTexture)m.shadeMultiplyTexture=clothTex("#C8B8A4");if(m.shadeColorFactor)m.shadeColorFactor.set("#ffffff");}});}
+    /* the VRoid model wears its own clothes: tint them, keeping their texture and folds */
+    const top=lk.top||st.Tops;
+    if(top&&/(^|_)Tops_/.test(n)&&m.color)m.color.set(top);
+    for(const part of ["Bottoms","Shoes"])if(st[part]&&new RegExp("(^|_)"+part+"_").test(n)&&m.color)m.color.set(st[part]);});}
 function bonePin(bone){bone.updateWorldMatrix(true,false);const q=new THREE.Quaternion();bone.getWorldQuaternion(q);const ad=new THREE.Group();ad.quaternion.copy(q.invert());bone.add(ad);return ad;}
 /* original armor worn on the VRM skeleton so the shared sample reads as a class */
 function dressVrm(c,v){const G=Object.assign({},GEAR[c.cls]||GEAR.knight,c.look&&c.look.top?{cloth:c.look.top}:{}),H=v.humanoid,chest=H.getRawBoneNode("chest")||H.getRawBoneNode("spine"),upper=H.getRawBoneNode("upperChest")||chest,hips=H.getRawBoneNode("hips");
@@ -1056,9 +1058,11 @@ function attachVrmTo(c,v,styled){
     if(la&&rs&&rh){la.rotation.set(0,0,-1.2);v.update(0);v.scene.updateMatrixWorld(true);const a=new THREE.Vector3(),b=new THREE.Vector3();rs.getWorldPosition(a);rh.getWorldPosition(b);if(b.y>a.y)sg=-1;la.rotation.set(0,0,0);v.update(0);}
     c.vsg=sg;}
   const mats=vrmMats(v),base=new Map();mats.forEach(m=>{if(m.color){m.color.multiplyScalar(.92);base.set(m,m.color.clone());}if(m.shadeColorFactor)m.shadeColorFactor.multiplyScalar(.94);});
-  const tops=mats.filter(m=>/^Tops/.test(m.name||"")&&m.color);
-  c.recolor=o=>{tops.forEach(m=>{if(o&&o.body)m.color.set(o.body).multiplyScalar(.92);else m.color.copy(base.get(m));});};
-  c.body.visible=false;c.root.add(holder);c.vrm=v;c.vrmHolder=holder;if(styled){v.scene.updateMatrixWorld(true);try{dressVrm(c,v);}catch(e){}}const oid=c.hatId;c.hatId=null;setHat(c,oid||"plain");}
+  /* the top follows the player's chosen colour first, then the outfit's colour, then the class colour */
+  const tops=mats.filter(m=>/(^|_)Tops_/.test(m.name||"")&&m.color);
+  c.recolor=o=>{tops.forEach(m=>{if(c.look&&c.look.top)m.color.set(c.look.top).multiplyScalar(.92);else if(o&&o.body)m.color.set(o.body).multiplyScalar(.92);else m.color.copy(base.get(m));});};
+  /* heroes are the plain VRoid models: no extra armor, cape or hair pieces on top */
+  c.body.visible=false;c.root.add(holder);c.vrm=v;c.vrmHolder=holder;const oid=c.hatId;c.hatId=null;setHat(c,oid||"plain");}
 /* full-body motion for VRoid heroes: every joint gets a target, and joints blend smoothly toward it */
 const VBONES=["hips","spine","chest","upperChest","neck","head","leftShoulder","rightShoulder","leftUpperArm","rightUpperArm","leftLowerArm","rightLowerArm","leftHand","rightHand",
   "leftUpperLeg","rightUpperLeg","leftLowerLeg","rightLowerLeg","leftFoot","rightFoot"];
@@ -1623,7 +1627,7 @@ async function buildVrmShots(onlyG){const lk=lookOf(),lkk=lookKeyOf(lk);for(cons
   for(const key in SHOTS)delete SHOTS[key];if($("#pick")&&!$("#pick").hidden)pickClass();if(tab==="wardrobe")renderCamp();}
 function heroShot(cls,outfitId,S0,rot,g){g=g||gender();const Z=S0||256;let sc,c;const V=VSHOT[cls+(g==='m'?'_m':'')];if(V){sc=V.sc;c=V.c;c.hatId=null;setHat(c,outfitId);}else{sc=new THREE.Scene();sc.add(new THREE.HemisphereLight("#FFFFFF","#B8A894",.75));const dl=new THREE.DirectionalLight("#FFF1D6",.85);dl.position.set(2,3,4);sc.add(dl);
   const prev=scene;scene=sc;c=makeChar(cls,outfitId,g);scene=prev;c.cur="idle";animHero(c,.01);}c.root.rotation.y=rot==null?-.35:rot;
-  const cam=new THREE.PerspectiveCamera(28,1,.1,24);if(V){cam.position.set(0,.95,3.3);cam.lookAt(0,.88,0);}else{cam.position.set(0,1.12,3.7);cam.lookAt(0,.98,0);}
+  const cam=new THREE.PerspectiveCamera(28,1,.1,24);if(V){/* heroes stand 1.88 tall: frame head to toe */cam.position.set(0,1.0,4.3);cam.lookAt(0,.94,0);}else{cam.position.set(0,1.12,3.7);cam.lookAt(0,.98,0);}
   const rt=new THREE.WebGLRenderTarget(Z,Z,{samples:4});rt.texture.encoding=THREE.sRGBEncoding;R3.setRenderTarget(rt);R3.setClearColor(0,0);R3.clear();R3.render(sc,cam);
   const px=new Uint8Array(Z*Z*4);R3.readRenderTargetPixels(rt,0,0,Z,Z,px);R3.setRenderTarget(null);rt.dispose();
   const cv2=document.createElement("canvas");cv2.width=cv2.height=Z;const g2=cv2.getContext("2d"),id=g2.createImageData(Z,Z);for(let y=0;y<Z;y++)id.data.set(px.subarray((Z-1-y)*Z*4,(Z-y)*Z*4),y*Z*4);g2.putImageData(id,0,0);return cv2.toDataURL();}
