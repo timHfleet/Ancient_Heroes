@@ -24,6 +24,18 @@ Then visit http://localhost:8000.
 
 Choose Female or Male when you pick your hero, or switch any time in the Wardrobe. The female hero is a licensed anime VRM, about six to seven heads tall; the male hero, Kiri, is a VRoid model at `assets/v/hero-male.vrm` (if that file is missing, male heroes use the female body with a broader build). Each class recolours the model's own hair and clothes and holds its class weapon in the fist. Pets stay small and round. A VRM you load from the Wardrobe replaces the built-in hero. Idle and walk are posed by the game on the VRM skeleton.
 
+## Weapons and armor
+
+Open the **Gear** tab to see what you wear. Monsters sometimes drop a weapon or armor (farther zones drop better), and the world boss always drops something Epic or better. Items come in four rarities: Common, Rare, Epic and Legendary.
+
+- **Weapons** raise attack; Epic and Legendary also add critical chance. Rarer weapons glow in their rarity colour in your hero's hand.
+- **Armor** raises health and reduces damage taken.
+- Compare items in your bag, equip them, sell them for gold, or **enhance** your equipped gear from +1 to +10 with gold.
+
+## Skill moves
+
+Every skill has its own move, and its damage lands when the move connects: the Swordsman leaps onto the target and smashes down, the Gunner braces and fires a volley or throws a grenade, the Assassin dashes past a foe and stabs down from the air, the Wizard channels meteors or slams the staff, and the Priest floats up in holy light.
+
 ## Hair and clothes colours
 
 In the Wardrobe, pick a hair colour, a top colour and a bottoms colour. The striped swatch goes back to the class colours. Your choice is saved in your browser and other players see it.
