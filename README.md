@@ -59,4 +59,4 @@ The round portrait shows your level, name, and power. The slim green bar is heal
 
 ## Deploy on Render
 
-`render.yaml` sets this up as a Render static site. The service slug stays `ikigai-saga` so an existing Blueprint deploy and its URL keep working. To show the new title in the Render dashboard, rename the service's display name there. Changing the `name` field in `render.yaml` would provision a different service.
+`render.yaml` sets this up as a Render static site named `ancient-heroes`: on Render choose **New → Blueprint** and pick the `Ancient_Heroes` repository.
