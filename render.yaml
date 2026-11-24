@@ -1,8 +1,6 @@
-# Slug stays ikigai-saga so the existing Render service and URL keep working.
-# Rename the display name in the Render dashboard if you want it to read Ancient Heroes.
 services:
   - type: web
-    name: ikigai-saga
+    name: ancient-heroes
     runtime: static
     buildCommand: ""
     staticPublishPath: .
